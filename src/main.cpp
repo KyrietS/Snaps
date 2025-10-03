@@ -1,74 +1,37 @@
 #include <map>
 #include <ranges>
 #include <vector>
+#include <raylib.h>
 
-#include "raylib.h"
+#include "Block.hpp"
+#include "Grid.hpp"
 
 constexpr int BOX_SIZE = 16;
 constexpr float GRAVITY = 500.0f;
 
-enum class BoxType {
-	AIR, STONE, WOOD, SAND, WATER
-};
-
-struct Box {
-	Vector2 Position = {0, 0};
-	Vector2 Velocity = {0, 0};
-	BoxType Type = BoxType::AIR;
-	Color FillColor = WHITE;
-	bool Static = false;
-};
-
-// using Pos = std::pair<int, int>;
-// std::map<Pos, Box> MAP;
-std::array<std::array<Box, 100>, 100> MAP;
+constexpr Color STONE_COLOR = {128, 128, 128, 255};
+constexpr Color SAND_COLOR = {194, 178, 128, 255};
 
 
-
-BoxType SELECTED_BOX_TYPE = BoxType::SAND;
-
-Color GetColor(BoxType type) {
-	switch (type) {
-		case BoxType::AIR: return {0, 0, 0, 0};
-		case BoxType::STONE: return {128, 128, 128, 255};
-		case BoxType::WOOD: return {139, 69, 19, 255};
-		case BoxType::SAND: return{194, 178, 128, 255};
-		case BoxType::WATER: return {0, 0, 255, 100};
-	}
-	return WHITE;
+void DrawUi() {
+	DrawFPS(10, GetScreenHeight() - 20);
 }
 
-void SelectTool() {
-	if (IsKeyPressed(KEY_ONE)) {
-		SELECTED_BOX_TYPE = BoxType::STONE;
-	}
-	if (IsKeyPressed(KEY_TWO)) {
-		SELECTED_BOX_TYPE = BoxType::WOOD;
-	}
-	if (IsKeyPressed(KEY_THREE)) {
-		SELECTED_BOX_TYPE = BoxType::SAND;
-	}
-	if (IsKeyPressed(KEY_FOUR)) {
-		SELECTED_BOX_TYPE = BoxType::WATER;
-	}
-}
-
-void InitializeMap() {
+namespace Brick {
+void InitializeMap(Grid& grid) {
 	for (int gridX = 10; gridX < 50; gridX++) {
 		const int gridY = GetScreenHeight() / BOX_SIZE - 5;
 		const float worldX = static_cast<float>(gridX) * BOX_SIZE;
 		const float worldY = static_cast<float>(gridY) * BOX_SIZE;
-		MAP[gridX][gridY] = Box {
-			.Position = {worldX, worldY},
-			.Type = BoxType::STONE,
-			.FillColor = GetColor(BoxType::STONE)
+		grid[gridX, gridY] = Block {
+			.WorldPosition = {worldX, worldY},
+			.FillColor = STONE_COLOR,
+			.IsDynamic = false
 		};
 	}
 }
 
-void HandleInput() {
-	SelectTool();
-
+void HandleInput(Grid& grid) {
 	const Vector2 mousePos = GetMousePosition();
 
 	// Snap to grid 16x16
@@ -78,102 +41,68 @@ void HandleInput() {
 	const int gridPosX = static_cast<int>(mousePos.x) / BOX_SIZE;
 	const int gridPosY = static_cast<int>(mousePos.y) / BOX_SIZE;
 
-	DrawRectangleLines(worldPosX, worldPosY, BOX_SIZE, BOX_SIZE, GetColor(SELECTED_BOX_TYPE));
+	DrawRectangleLines(worldPosX, worldPosY, BOX_SIZE, BOX_SIZE, SAND_COLOR);
 
 	if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-		const auto& below = MAP[gridPosX][gridPosY+1];
-		if (below.Type != BoxType::AIR and below.Position.y < (gridPosY+1) * BOX_SIZE) return;
-		MAP[gridPosX][gridPosY] = Box {
-			.Position = {static_cast<float>(worldPosX), static_cast<float>(worldPosY)},
-			.Type = SELECTED_BOX_TYPE,
-			.FillColor = GetColor(SELECTED_BOX_TYPE)
+		const auto& below = grid[gridPosX, gridPosY+1];
+		if (below.has_value() and below->WorldPosition.y < (gridPosY+1) * BOX_SIZE) return;
+		grid[gridPosX, gridPosY] = Block {
+			.WorldPosition = {static_cast<float>(worldPosX), static_cast<float>(worldPosY)},
+			.FillColor = SAND_COLOR,
+			.IsDynamic = true
 		};
 	}
 	if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
-		MAP[gridPosX][gridPosY].Type = BoxType::AIR;
+		grid[gridPosX, gridPosY] = std::nullopt;
 	}
 }
 
-void SimulateSand(Box& box, size_t x, size_t y) {
-	if (y + 1 >= MAP[x].size()) return; // Out of bounds
+void SimulateDynamicBlock(Grid& grid, const int x, const int y, Block& block) {
+	if (not grid.InBounds(x, y+1)) {
+		block.Velocity.y = 0;
+		return;
+	}
 
-	Box& below = MAP[x][y + 1];
-	const int newGridY = static_cast<int>(box.Position.y + BOX_SIZE) / BOX_SIZE;
-	if (below.Type == BoxType::AIR and newGridY != y) {
-		// allocate space below
-		std::swap(box, below);
+	auto& below = grid[x, y+1];
+	const int newGridY = static_cast<int>(block.WorldPosition.y + BOX_SIZE) / BOX_SIZE;
+	if (not below.has_value() and newGridY != y) {
+		below = block;
+		grid.Remove(x, y);
 		return;
 	}
 
 	const int targetY = y * BOX_SIZE;
 	if (y < targetY) {
-		box.Velocity.y += GRAVITY * GetFrameTime();
+		block.Velocity.y += GRAVITY * GetFrameTime();
 	}
 
-	box.Position.y += box.Velocity.y * GetFrameTime();
-	if (box.Position.y >= targetY and below.Type != BoxType::AIR) {
-		box.Velocity = {0, 0};
-		box.Position.y = targetY;
-	}
-
-	return;
-
-	const int newY = box.Position.y + box.Velocity.y * GetFrameTime();
-	if (newY < targetY) {
-		box.Position.y = newY;
-	} else if (newY >= targetY) {
-		box.Position.y = targetY;
-		box.Velocity = {0, 0};
+	block.WorldPosition.y += block.Velocity.y * GetFrameTime();
+	if (block.WorldPosition.y >= targetY and below.has_value()) {
+		block.WorldPosition.y = targetY;
+		if (below->Velocity.y == 0) {
+			block.Velocity = {0, 0};
+		}
 	}
 }
 
-void SimulatePhysics() {
-	for (size_t x = 0; x < MAP.size(); x++) {
-		for (size_t y = 0; y < MAP[x].size(); y++) {
-			Box& box = MAP[x][y];
-			switch (box.Type) {
-				case BoxType::SAND:
-					SimulateSand(box, x, y);
-					break;
-				default:
-					break;
+void SimulatePhysics(Grid& grid) {
+	for (int y = 0; y < grid.Height(); y++) {
+		for (int x = 0; x < grid.Width(); x++) {
+			auto& block = grid[x, y];
+			if (block.has_value() and block->IsDynamic) {
+				SimulateDynamicBlock(grid, x, y, *block);
 			}
-
-			// const int targetY = y * BOX_SIZE;
-			// const int newY = box.Position.y + box.Velocity.y * GetFrameTime();
-			// if (newY < targetY) {
-			// 	box.Position.y = newY;
-			// } else if (newY >= targetY) {
-			// 	box.Position.y = targetY;
-			// 	box.Velocity = {0, 0};
-			// }
 		}
 	}
 }
 
-void Draw() {
-	for (const auto &row: MAP) {
-		for (const auto& box : row ) {
-			if (box.Type == BoxType::AIR) continue;
-			DrawRectangle(static_cast<int>(box.Position.x), static_cast<int>(box.Position.y), BOX_SIZE, BOX_SIZE, box.FillColor);
+void Draw(const Grid& grid) {
+	for (const auto& block : grid.Blocks()) {
+		if (block.has_value()) {
+			DrawRectangle(static_cast<int>(block->WorldPosition.x), static_cast<int>(block->WorldPosition.y), BOX_SIZE, BOX_SIZE, block->FillColor);
 		}
 	}
 }
-
-void DrawUi() {
-	// Draw the selected tool
-	const char *toolName = "";
-	switch (SELECTED_BOX_TYPE) {
-		case BoxType::AIR: toolName = "Air"; break;
-		case BoxType::STONE: toolName = "Stone"; break;
-		case BoxType::WOOD: toolName = "Wood"; break;
-		case BoxType::SAND: toolName = "Sand"; break;
-		case BoxType::WATER: toolName = "Water"; break;
-	}
-	DrawText(TextFormat("Selected Tool: %s", toolName), 10, 10, 20, WHITE);
-	DrawText("Press 1-4 to select tool", 10, 30, 10, WHITE);
-
-	DrawFPS(10, GetScreenHeight() - 20);
 }
 
 
@@ -182,17 +111,18 @@ int main() {
 	constexpr int screenHeight = 450;
 
 	InitWindow(screenWidth, screenHeight, "Simple Raylib Window - Brick App");
-	// SetTargetFPS(120);
 
-	InitializeMap();
+	Brick::Grid grid(100, 100);
+
+	InitializeMap(grid);
 
 	while (!WindowShouldClose()) // Detect window close button or ESC key
 	{
 		BeginDrawing(); {
 			ClearBackground(BLACK);
-			HandleInput();
-			SimulatePhysics();
-			Draw();
+			HandleInput(grid);
+			SimulatePhysics(grid);
+			Draw(grid);
 			DrawUi();
 		}
 		EndDrawing();
