@@ -1,10 +1,9 @@
-#include <map>
-#include <ranges>
 #include <vector>
 #include <raylib.h>
 #include <cmath>
 #include <iostream>
 #include <raymath.h>
+#include <stack>
 
 #include "Block.hpp"
 #include "Constants.hpp"
@@ -12,23 +11,23 @@
 
 constexpr Color STONE_COLOR = {128, 128, 128, 255};
 constexpr Color SAND_COLOR = {194, 178, 128, 255};
-constexpr float TIME_MULTIPLIER = .1f;
+constexpr float TIME_MULTIPLIER = .5f;
 
 bool tick = false;
 
 float DeltaTime() {
-	return 0.008f;
+	// return 0.008f;
 	// if (tick) {
 	// 	return 0.016f; // simulate 60 FPS
 	// }
 	// return 0.0f;
 
 	// ONLY FOR DEBUGGING PURPOSES
-	// float dt =  GetFrameTime() * TIME_MULTIPLIER;
+	float dt =  GetFrameTime() * TIME_MULTIPLIER;
 	// if (dt > 0.016f) {
 	// 	return 0.016f; // simulate 60 FPS
 	// }
-	// return dt;
+	return dt;
 }
 
 namespace Brick {
@@ -172,6 +171,15 @@ void SimulateDynamicBlock(Grid& grid, const int x, const int y, Block& block) {
 	}
 }
 
+struct SecondPassContact {
+	int x;
+	int y;
+};
+
+std::stack<SecondPassContact> rightMovementContacts;
+std::stack<SecondPassContact> upMovementContacts;
+bool secondPass = false;
+
 void SolveMovementDown(Grid& grid, int& x, int& y, Block& block) {
 	// Block is not moving down
 	if (block.Velocity.y < 0) return;
@@ -226,8 +234,12 @@ void SolveMovementUp(Grid& grid, int& x, int& y, Block& block) {
 
 	// Desired grid is occupied. Stop.
 	if (wantsToMoveUp and blockAbove.has_value()) {
-		block.WorldPosition.y = static_cast<float>(y) * BOX_SIZE;
-		block.Velocity.y = 0;
+		if (blockAbove->IsDynamic and not secondPass) {
+			upMovementContacts.push({x, y});
+		} else {
+			block.WorldPosition.y = static_cast<float>(y) * BOX_SIZE;
+			block.Velocity.y = 0;
+		}
 		return;
 	}
 
@@ -304,8 +316,13 @@ void SolveMovementRight(Grid& grid, int& x, int& y, Block& block) {
 
 	// Desired grid is occupied. Stop.
 	if (wantsToMoveRight and blockRight.has_value()) {
-		block.WorldPosition.x = static_cast<float>(x) * BOX_SIZE;
-		block.Velocity.x = 0;
+		if (blockRight->IsDynamic and not secondPass) {
+			rightMovementContacts.push({x, y});
+			x = -999;
+		} else {
+			block.WorldPosition.x = static_cast<float>(x) * BOX_SIZE;
+			block.Velocity.x = 0;
+		}
 		return;
 	}
 
@@ -334,6 +351,8 @@ void SolveGridPhysics(Grid& grid, int x, int y) {
 		SolveMovementRight(grid, x, y, *block);
 	else
 		SolveMovementLeft(grid, x, y, *block);
+
+	if (x == -999) return; // will continue in second pass
 
 	auto& movedBlock = grid[x, y].value();
 
@@ -387,8 +406,28 @@ void SimulatePhysics(Grid& grid) {
 		for (int x = 0; x < grid.Width(); x++) {
 			SolveGridPhysics(grid, x, y);
 		}
+		secondPass = true;
+		while (not rightMovementContacts.empty()) {
+			auto [x, y] = rightMovementContacts.top();
+			SolveGridPhysics(grid, x, y);
+			rightMovementContacts.pop();
+		}
+		secondPass = false;
+		// for (int x = grid.Width() - 1; x >= 0; x--) {
+		// 	SolveGridPhysics(grid, x, y);
+		// }
 	}
 
+	secondPass = true;
+	std::cout << "up seconds pass: " << upMovementContacts.size() << std::endl;
+	std::cout << "right seconds pass: " << rightMovementContacts.size() << std::endl;
+	while (not upMovementContacts.empty()) {
+		auto [x, y] = upMovementContacts.top();
+		SolveGridPhysics(grid, x, y);
+		upMovementContacts.pop();
+	}
+
+	secondPass = false;
 }
 
 void Draw(const Grid& grid) {
@@ -406,7 +445,7 @@ int main() {
 	constexpr int screenHeight = 450;
 
 	InitWindow(screenWidth, screenHeight, "Simple Raylib Window - Brick App");
-	SetTargetFPS(60);
+	// SetTargetFPS(60);
 
 	Brick::Grid grid(100, 100);
 
