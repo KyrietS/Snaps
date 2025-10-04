@@ -23,8 +23,13 @@ public:
 		return m_Blocks[y * m_Width + x];
 	}
 
+	const std::optional<Block>& operator[](const int x, const int y) const {
+		return m_Blocks[y * m_Width + x];
+	}
+
 	int Width() const { return m_Width; }
 	int Height() const { return m_Height; }
+	std::vector<std::optional<Block>>& Blocks() { return m_Blocks; }
 	const std::vector<std::optional<Block>>& Blocks() const { return m_Blocks; }
 
 private:
