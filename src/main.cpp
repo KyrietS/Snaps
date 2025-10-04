@@ -407,6 +407,8 @@ void SimulatePhysics(Grid& grid) {
 			SolveGridPhysics(grid, x, y);
 		}
 		secondPass = true;
+		if (rightMovementContacts.size() > 0)
+			std::cout << "right seconds pass: " << rightMovementContacts.size() << std::endl;
 		while (not rightMovementContacts.empty()) {
 			auto [x, y] = rightMovementContacts.top();
 			SolveGridPhysics(grid, x, y);
@@ -419,8 +421,8 @@ void SimulatePhysics(Grid& grid) {
 	}
 
 	secondPass = true;
-	std::cout << "up seconds pass: " << upMovementContacts.size() << std::endl;
-	std::cout << "right seconds pass: " << rightMovementContacts.size() << std::endl;
+	if (upMovementContacts.size() > 0)
+		std::cout << "up seconds pass: " << upMovementContacts.size() << std::endl;
 	while (not upMovementContacts.empty()) {
 		auto [x, y] = upMovementContacts.top();
 		SolveGridPhysics(grid, x, y);
