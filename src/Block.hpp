@@ -23,11 +23,11 @@ inline void ApplyGravity(Block& block) {
 	block.ForceAccum += Vector2{0.0f, GRAVITY} * block.GravityScale / block.InvMass;
 }
 
-inline void ApplyFriction(Block& block) {
+inline void ApplyFriction(Block& block, float multiplier = 1.0f) {
 	if (block.Velocity.x < 0.0f) {
-		block.ForceAccum.x += FRICTION / block.InvMass;
+		block.ForceAccum.x += multiplier * FRICTION / block.InvMass;
 	} else if (block.Velocity.x > 0.0f) {
-		block.ForceAccum.x -= FRICTION / block.InvMass;
+		block.ForceAccum.x -= multiplier * FRICTION / block.InvMass;
 	}
 }
 
