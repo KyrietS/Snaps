@@ -7,7 +7,7 @@ std::pair<int, int> ToWindowCoordinates(const Snaps::Block& block) {
 	return {static_cast<int>(block.WorldPosition.x), static_cast<int>(block.WorldPosition.y)};
 }
 
-void Draw(const Snaps::Grid& grid) {
+void DrawGrid(const Snaps::Grid& grid) {
 	const int width = grid.Width();
 	const int height = grid.Height();
 
@@ -32,7 +32,10 @@ void Draw(const Snaps::Grid& grid) {
 }
 }
 
-TestScenePreview::TestScenePreview(const TestScene &scene) : m_Scene(scene) {}
+TestScenePreview::TestScenePreview(const TestScene &scene)
+	: m_Scene(scene)
+	, m_GridIndex(static_cast<int>(m_Scene.GetGridHistory().size()))
+{}
 
 void TestScenePreview::Show() {
 	constexpr int screenWidth = 500;
@@ -46,10 +49,46 @@ void TestScenePreview::Show() {
 		BeginDrawing();
 		{
 			ClearBackground(BLACK);
-			Draw(m_Scene.GetCurrentGrid());
+			DrawGrid(GetSelectedGrid());
+			DrawGridSelectionUi();
 		}
 		EndDrawing();
 	}
 
 	CloseWindow();
+}
+
+const Snaps::Grid & TestScenePreview::GetSelectedGrid() const {
+	if (m_GridIndex == m_Scene.GetGridHistory().size()) return m_Scene.GetCurrentGrid();
+	return m_Scene.GetGridHistory().at(m_GridIndex);
+}
+
+void TestScenePreview::DrawGridSelectionUi() {
+	const int historySize = static_cast<int>(m_Scene.GetGridHistory().size());
+	if (IsKeyPressed(KEY_LEFT) or IsKeyPressedRepeat(KEY_LEFT)) m_GridIndex = std::max(0, m_GridIndex - 1);
+	if (IsKeyPressed(KEY_RIGHT) or IsKeyPressedRepeat(KEY_RIGHT)) m_GridIndex = std::min(historySize, m_GridIndex + 1);
+
+	const int gridIconSize = 4;
+	const int iconsBarWidth = (historySize + 1) * gridIconSize * 2;
+	int iconsBarCenterOffset = (GetScreenWidth() - iconsBarWidth) / 2;
+	if (iconsBarWidth > GetScreenWidth()) {
+		iconsBarCenterOffset = 0;
+	}
+
+	int gridIconX = gridIconSize + iconsBarCenterOffset;
+	int gridIconY = gridIconSize;
+
+	for (int i = 0; i <= historySize; i++) {
+		if (gridIconX + gridIconSize > GetScreenWidth()) {
+			gridIconX = gridIconSize + iconsBarCenterOffset;
+			gridIconY += gridIconSize * 2;
+		}
+		const Color color = (i == m_GridIndex) ? GREEN : GRAY;
+		DrawRectangle(gridIconX, gridIconY, gridIconSize, gridIconSize, color);
+		gridIconX += gridIconSize * 2;
+	}
+
+	const int textX = 10;
+	const int textY = GetScreenHeight() - 30;
+	DrawText(TextFormat("%d / %d", m_GridIndex, historySize), textX, textY, 20, WHITE);
 }

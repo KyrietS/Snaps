@@ -8,5 +8,9 @@ public:
 	void Show();
 
 private:
+	const Snaps::Grid& GetSelectedGrid() const;
+	void DrawGridSelectionUi();
+
 	const TestScene& m_Scene;
+	int m_GridIndex = 0;
 };
