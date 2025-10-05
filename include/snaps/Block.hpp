@@ -1,6 +1,8 @@
 #pragma once
-#include <raylib.h>
 #include "Constants.hpp"
+#include <raylib.h>
+#include <raymath.h>
+#include <iostream>
 
 namespace Snaps {
 struct Block {

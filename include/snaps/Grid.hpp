@@ -1,8 +1,8 @@
 #pragma once
+#include "Block.hpp"
 #include <optional>
 #include <vector>
 
-#include "Block.hpp"
 
 namespace Snaps {
 class Grid {

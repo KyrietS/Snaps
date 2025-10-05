@@ -17,10 +17,13 @@ FetchContent_MakeAvailable(raylib)
 
 # SnapsApp
 file(GLOB_RECURSE sources CONFIGURE_DEPENDS "src/**.cpp" "src/**.hpp")
-add_executable(SnapsApp ${sources})
-target_include_directories(SnapsApp PRIVATE src)
-target_link_libraries(SnapsApp PRIVATE raylib)
+add_library(Snaps STATIC ${sources})
+target_include_directories(Snaps PRIVATE src PUBLIC include)
+target_link_libraries(Snaps PRIVATE raylib) # TODO Remove this later
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/src FILES ${SOURCES})
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT SnapsApp)
+
+add_subdirectory(sandbox)
+add_subdirectory(tests)
