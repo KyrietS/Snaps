@@ -9,9 +9,10 @@ struct Block {
 	Color FillColor = PINK;
 	bool IsDynamic = false;
 
-	float InvMass = 1.0f;
+	float InvMass = 0.5f;
 	Vector2 ForceAccum = {0, 0};
 	float LinearDamping = 0.0f;
+	float Friction = 0.5f;
 	float GravityScale = 1.0f;
 
 	// ----- Read only -----
@@ -32,23 +33,29 @@ inline void ApplyGravity(Block& block) {
 }
 
 inline void ApplyFriction(Block& block, float multiplier = 1.0f) {
-	float speed = std::abs(block.Velocity.x);
-	if (speed <= 1e-6f)
+	float speed = std::abs(block.Velocity.x) + block.ForceAccum.x * block.InvMass * DeltaTime();
+	if (speed <= 1e-6f) {
+		block.Velocity.x = 0;
 		return;
+	}
 
 	float dir = block.Velocity.x > 0 ? 1.0f : -1.0f;
 	float mass = 1.0f / block.InvMass;
-	float frictionForce = FRICTION * multiplier * mass * dir;
+
+	// Assume the gravity is already applied and it's directed downwards
+	float frictionForce = std::abs(block.ForceAccum.y) * multiplier * mass * dir;
 
 	// Clamp: if this force would reverse velocity, zero it instead
 	float maxForce = mass * speed / DeltaTime();
 	if (std::abs(frictionForce) > maxForce) {
-		frictionForce *= maxForce / std::abs(frictionForce);
+		frictionForce = maxForce * dir;
+		std::cout << "friction stopped the object" << std::endl;
 	}
 
 	block.ForceAccum.x -= frictionForce;
 }
 
+// Impulse is an immediate change in velocity, i.e. velocity * mass
 inline void ApplyImpulse(Block& block, const Vector2 impulse) {
 	block.Velocity += impulse * block.InvMass;
 }

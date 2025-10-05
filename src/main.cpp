@@ -99,7 +99,14 @@ void HandleInput(Grid& grid) {
 	if (IsKeyReleased(KEY_UP)) {
 		for (auto& block : grid.Blocks()) {
 			if (block and block->IsDynamic) {
-				ApplyImpulse(*block, {0, -300.07f});
+				// AddForce(*block, {0, -BOX_SIZE * 2 * GRAVITY});
+				const int distanceToJump = 12;
+				const int pixelsToJump = BOX_SIZE * distanceToJump + 2; // +1 to add a margin
+				const float jumpVelocity = std::sqrt(2 * GRAVITY * pixelsToJump);
+				const Vector2 jumpImpulse = Vector2{0, -jumpVelocity} / block->InvMass;
+				std::cout << "jump velocity: " << jumpVelocity << std::endl;
+				std::cout << "impulse: " << jumpImpulse.y << std::endl;
+				ApplyImpulse(*block, jumpImpulse);
 			}
 		}
 	}
@@ -113,7 +120,7 @@ void HandleInput(Grid& grid) {
 	if (IsKeyReleased(KEY_RIGHT)) {
 		for (auto& block : grid.Blocks()) {
 			if (block and block->IsDynamic) {
-				ApplyImpulse(*block, {+200.0f, 0});
+				ApplyImpulse(*block, {+333.f, 0});
 			}
 		}
 	}
@@ -206,6 +213,9 @@ void SolveMovementUp(Grid& grid, int& x, int& y, Block& block) {
 	// Desired grid is free. Claim it if we have enough velocity to reach it.
 	if (wantsToMoveUp and not blockAbove.has_value()) {
 		const float minVelocityToReachNextGrid = std::sqrtf(2.0f * GRAVITY * BOX_SIZE);
+		// More accurate check if next grid is reachable
+		// const float distanceToReachNextGrid = block.WorldPosition.y - desiredYGrid * BOX_SIZE;
+		// const float minVelocityToReachNextGrid = std::sqrtf(2.0f * GRAVITY * distanceToReachNextGrid);
 
 		// Not enough velocity to reach next grid. Stop.
 		if (std::abs(block.Velocity.y) < minVelocityToReachNextGrid) {
@@ -347,6 +357,11 @@ void Integrate(Block& block) {
 	};
 
 	block.Velocity += block.Acceleration * DeltaTime();
+
+	// Realistically, any velocity smaller than 1.0/DeltaTime() will not move the object in a pixel space.
+	if (std::abs(block.Velocity.x) < 0.01f) block.Velocity.x = 0.0f;
+	if (std::abs(block.Velocity.y) < 0.01f) block.Velocity.y = 0.0f;
+
 	block.WorldPosition += block.Velocity * DeltaTime();
 	block.ForceAccum = {0, 0};
 
