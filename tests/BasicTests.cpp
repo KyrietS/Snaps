@@ -3,7 +3,7 @@
 #include "utils/TestScene.hpp"
 #include "utils/TestScenePreview.hpp"
 
-constexpr Color SAND_COLOR = {194, 178, 128, 255};
+constexpr Color SAND_COLOR = { 194, 178, 128, 255 };
 
 Snaps::Block SandBlock(const int x, const int y) {
 	return Snaps::Block {
@@ -14,7 +14,7 @@ Snaps::Block SandBlock(const int x, const int y) {
 }
 
 void AddSand(Snaps::Grid& grid, int x, int y) {
-	grid[x, y] = SandBlock(x * Snaps::BOX_SIZE, y * Snaps::BOX_SIZE);
+	grid[ x, y ] = SandBlock(x * Snaps::BOX_SIZE, y * Snaps::BOX_SIZE);
 }
 
 void BasicTest() {

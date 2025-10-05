@@ -23,7 +23,7 @@ target_link_libraries(Snaps PRIVATE raylib) # TODO Remove this later
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/src FILES ${SOURCES})
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT SnapsApp)
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT SnapsSandbox)
 
 add_subdirectory(sandbox)
 add_subdirectory(tests)

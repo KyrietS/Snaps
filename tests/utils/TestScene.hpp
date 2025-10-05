@@ -8,6 +8,7 @@ public:
 
 	void Tick();
 	void Tick(int numberOfTicks);
+	void BreakAtTick(int tickNumber);
 
 	void SetDeltaTime(float newDeltaTime);
 
@@ -19,6 +20,7 @@ private:
 	Snaps::Grid& m_Grid;
 
 	float m_DeltaTime = 1.0f / 60.0f;
+	std::optional<int> m_BreakAtTick;
 	std::deque<Snaps::Grid> m_GridHistory;
 };
 
