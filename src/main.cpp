@@ -11,26 +11,12 @@
 
 constexpr Color STONE_COLOR = {128, 128, 128, 255};
 constexpr Color SAND_COLOR = {194, 178, 128, 255};
-constexpr float TIME_MULTIPLIER = .5f;
+
+
+namespace Brick {
 
 bool tick = false;
 
-float DeltaTime() {
-	// return 0.008f;
-	// if (tick) {
-	// 	return 0.016f; // simulate 60 FPS
-	// }
-	// return 0.0f;
-
-	// ONLY FOR DEBUGGING PURPOSES
-	float dt =  GetFrameTime() * TIME_MULTIPLIER;
-	// if (dt > 0.016f) {
-	// 	return 0.016f; // simulate 60 FPS
-	// }
-	return dt;
-}
-
-namespace Brick {
 void InitializeMap(Grid& grid) {
 	for (int gridX = 10; gridX < 50; gridX++) {
 		const int gridY = GetScreenHeight() / BOX_SIZE - 5;
@@ -113,21 +99,21 @@ void HandleInput(Grid& grid) {
 	if (IsKeyReleased(KEY_UP)) {
 		for (auto& block : grid.Blocks()) {
 			if (block and block->IsDynamic) {
-				ApplyImpulse(*block, {0, -400.0f});
+				ApplyImpulse(*block, {0, -300.07f});
 			}
 		}
 	}
 	if (IsKeyReleased(KEY_LEFT)) {
 		for (auto& block : grid.Blocks()) {
 			if (block and block->IsDynamic) {
-				ApplyImpulse(*block, {-400.0f, 0});
+				ApplyImpulse(*block, {-200.0f, 0});
 			}
 		}
 	}
 	if (IsKeyReleased(KEY_RIGHT)) {
 		for (auto& block : grid.Blocks()) {
 			if (block and block->IsDynamic) {
-				ApplyImpulse(*block, {+400.0f, 0});
+				ApplyImpulse(*block, {+200.0f, 0});
 			}
 		}
 	}
@@ -140,34 +126,6 @@ void HandleInput(Grid& grid) {
 		// 		break;
 		// 	}
 		// }
-	}
-}
-
-void SimulateDynamicBlock(Grid& grid, const int x, const int y, Block& block) {
-	if (not grid.InBounds(x, y+1)) {
-		block.Velocity.y = 0;
-		return;
-	}
-
-	auto& below = grid[x, y+1];
-	const int newGridY = static_cast<int>(block.WorldPosition.y + BOX_SIZE) / BOX_SIZE;
-	if (not below.has_value() and newGridY != y) {
-		below = block;
-		grid.Remove(x, y);
-		return;
-	}
-
-	const int targetY = y * BOX_SIZE;
-	if (y < targetY) {
-		block.Velocity.y += GRAVITY * DeltaTime();
-	}
-
-	block.WorldPosition.y += block.Velocity.y * DeltaTime();
-	if (block.WorldPosition.y >= targetY and below.has_value()) {
-		block.WorldPosition.y = targetY;
-		if (below->Velocity.y == 0) {
-			block.Velocity = {0, 0};
-		}
 	}
 }
 
@@ -272,7 +230,8 @@ void SolveMovementLeft(Grid& grid, int& x, int& y, Block& block) {
 
 	const int desiredXGrid = static_cast<int>(block.WorldPosition.x) / BOX_SIZE;
 	auto& blockLeft = grid[x - 1, y];
-	const bool wantsToMoveLeft = desiredXGrid < x;
+	const bool wantsToMoveLeft = desiredXGrid < x and block.Velocity.x < 0;
+	const float deceleration = block.Acceleration.x > 0 ? block.Acceleration.x : 0.0f;
 
 	// Desired grid is occupied. Stop.
 	if (wantsToMoveLeft and blockLeft.has_value()) {
@@ -284,14 +243,13 @@ void SolveMovementLeft(Grid& grid, int& x, int& y, Block& block) {
 	// [DECELERATION ONLY]
 	// Desired grid is free. Claim it if we have enough velocity to reach it.
 	if (wantsToMoveLeft and not blockLeft.has_value()) {
-		// FRICTION here should me maximal deceleration force possible. If it's too low,
-		// there might be a possibility that the block will not reach the next grid and be stuck (bugged)
-		const float minVelocityToReachNextGrid = std::sqrtf(2.0f * FRICTION * BOX_SIZE);
+		const float minVelocityToReachNextGrid = std::sqrtf(2.0f * deceleration * BOX_SIZE);
 
-		// Not enough velocity to reach next grid. Stop.
+		// Not enough velocity to reach the next grid. Stop and align to grid.
 		if (std::abs(block.Velocity.x) < minVelocityToReachNextGrid) {
 			block.WorldPosition.x = static_cast<float>(x) * BOX_SIZE;
 			block.Velocity.x = 0;
+			return;
 		} else { // Claim grid to the left.
 			blockLeft = block;
 			grid.Remove(x, y);
@@ -302,7 +260,7 @@ void SolveMovementLeft(Grid& grid, int& x, int& y, Block& block) {
 
 void SolveMovementRight(Grid& grid, int& x, int& y, Block& block) {
 	// Block is not moving right
-	if (block.Velocity.x <= 0) return; // moving left
+	if (block.Velocity.x < 0) return; // moving left
 
 	// No blocks to the right
 	if (not grid.InBounds(x+1, y)) { // at right edge of grid
@@ -312,11 +270,13 @@ void SolveMovementRight(Grid& grid, int& x, int& y, Block& block) {
 
 	const int desiredXGrid = static_cast<int>(block.WorldPosition.x + BOX_SIZE) / BOX_SIZE;
 	auto& blockRight = grid[x + 1, y];
-	const bool wantsToMoveRight = desiredXGrid > x;
+	const bool wantsToMoveRight = desiredXGrid > x and block.Velocity.x > 0;
+	const float deceleration = block.Acceleration.x < 0 ? -block.Acceleration.x : 0.0f;
 
 	// Desired grid is occupied. Stop.
 	if (wantsToMoveRight and blockRight.has_value()) {
 		if (blockRight->IsDynamic and not secondPass) {
+			// Try to solve in the second pass
 			rightMovementContacts.push({x, y});
 			x = -999;
 		} else {
@@ -329,23 +289,33 @@ void SolveMovementRight(Grid& grid, int& x, int& y, Block& block) {
 	// [DECELERATION ONLY]
 	// Desired grid is free. Claim it if we have enough velocity to reach it.
 	if (wantsToMoveRight and not blockRight.has_value()) {
-		const float minVelocityToReachNextGrid = std::sqrtf(2.0f * FRICTION * BOX_SIZE);
+		const float minVelocityToReachNextGrid = std::sqrtf(2.0f * deceleration * BOX_SIZE);
 
-		// Not enough velocity to reach next grid. Stop.
+		// Not enough velocity to reach next grid. Stop and align to grid.
 		if (std::abs(block.Velocity.x) < minVelocityToReachNextGrid) {
 			block.WorldPosition.x = static_cast<float>(x) * BOX_SIZE;
 			block.Velocity.x = 0;
-		} else { // Claim grid to the right.
+			return;
+		} else if (block.Velocity.x > 0) { // Claim grid to the right.
 			blockRight = block;
 			grid.Remove(x, y);
 			x += 1;
 		}
 	}
+
+	// ALIGN POSITION TO GRID IF NECESSARY
+	const int distanceFromCorrectPosition = x * BOX_SIZE - block.WorldPosition.x;
+	// Block stopped before reaching end of its own grid.
+	if (block.Velocity.x == 0 and block.Acceleration.x == 0 and distanceFromCorrectPosition != 0) {
+		std::cout << "block stopped without reaching end of its own grid\n";
+		// Snap it to the grid in one shot.
+		block.WorldPosition.x = static_cast<float>(x) * BOX_SIZE;
+	}
 }
 
 void SolveGridPhysics(Grid& grid, int x, int y) {
 	auto& block = grid[x, y];
-	if (not block.has_value() or not block->IsDynamic) return;
+	if (not block.has_value() or not block->IsDynamic or not block->NeedsCollisionResolution) return;
 
 	if (block->Velocity.x >= 0)
 		SolveMovementRight(grid, x, y, *block);
@@ -360,19 +330,24 @@ void SolveGridPhysics(Grid& grid, int x, int y) {
 		SolveMovementDown(grid, x, y, movedBlock);
 	else
 		SolveMovementUp(grid, x, y, movedBlock);
+
+	// Mark as resolved so we don't try to resolve it again this frame.
+	movedBlock.NeedsCollisionResolution = false;
 }
 
 void Integrate(Block& block) {
 	if (not block.IsDynamic or block.InvMass <= 0.0f) return;
 
-	Vector2 acceleration{
+	block.Acceleration = {
 		block.ForceAccum.x * block.InvMass,
-		block.ForceAccum.y * block.InvMass + GRAVITY * block.GravityScale
+		block.ForceAccum.y * block.InvMass
 	};
 
-	block.Velocity += acceleration * DeltaTime();
+	block.Velocity += block.Acceleration * DeltaTime();
 	block.WorldPosition += block.Velocity * DeltaTime();
 	block.ForceAccum = {0, 0};
+
+	block.NeedsCollisionResolution = true;
 }
 
 bool TouchesFloor(const Grid& grid, const int x, const int y, Block& block) {
@@ -393,7 +368,6 @@ void SimulatePhysics(Grid& grid) {
 					ApplyFriction(*block, 0.0f); // drag
 				}
 				Integrate(*block);
-				// SimulateDynamicBlock(grid, x, y, *block);
 			}
 		}
 	}
@@ -407,28 +381,20 @@ void SimulatePhysics(Grid& grid) {
 			SolveGridPhysics(grid, x, y);
 		}
 		secondPass = true;
-		if (rightMovementContacts.size() > 0)
-			std::cout << "right seconds pass: " << rightMovementContacts.size() << std::endl;
 		while (not rightMovementContacts.empty()) {
 			auto [x, y] = rightMovementContacts.top();
 			SolveGridPhysics(grid, x, y);
 			rightMovementContacts.pop();
 		}
 		secondPass = false;
-		// for (int x = grid.Width() - 1; x >= 0; x--) {
-		// 	SolveGridPhysics(grid, x, y);
-		// }
 	}
 
 	secondPass = true;
-	if (upMovementContacts.size() > 0)
-		std::cout << "up seconds pass: " << upMovementContacts.size() << std::endl;
 	while (not upMovementContacts.empty()) {
 		auto [x, y] = upMovementContacts.top();
 		SolveGridPhysics(grid, x, y);
 		upMovementContacts.pop();
 	}
-
 	secondPass = false;
 }
 
@@ -447,7 +413,7 @@ int main() {
 	constexpr int screenHeight = 450;
 
 	InitWindow(screenWidth, screenHeight, "Simple Raylib Window - Brick App");
-	// SetTargetFPS(60);
+	SetTargetFPS(60);
 
 	Brick::Grid grid(100, 100);
 
@@ -461,7 +427,7 @@ int main() {
 			SimulatePhysics(grid);
 			Draw(grid);
 			DrawUi(grid);
-			tick = false;
+			Brick::tick = false;
 		}
 		EndDrawing();
 	}
