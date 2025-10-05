@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Brick {
+namespace Snaps {
 
 constexpr int BOX_SIZE = 16;
 constexpr float GRAVITY = 200.0f;

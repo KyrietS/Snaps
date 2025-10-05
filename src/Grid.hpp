@@ -4,7 +4,7 @@
 
 #include "Block.hpp"
 
-namespace Brick {
+namespace Snaps {
 class Grid {
 public:
 	Grid(const int width, const int height) : m_Width(width), m_Height(height), m_Blocks(width * height, std::nullopt)

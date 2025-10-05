@@ -7,7 +7,7 @@ FetchContent_Declare(
     GIT_TAG 5.5
 )
 
-project(Bricks)
+project(Snaps)
 
 set(CMAKE_CXX_STANDARD 23)
 
@@ -15,12 +15,12 @@ set(CMAKE_CXX_STANDARD 23)
 # raylib
 FetchContent_MakeAvailable(raylib)
 
-# BrickApp
+# SnapsApp
 file(GLOB_RECURSE sources CONFIGURE_DEPENDS "src/**.cpp" "src/**.hpp")
-add_executable(BrickApp ${sources})
-target_include_directories(BrickApp PRIVATE src)
-target_link_libraries(BrickApp PRIVATE raylib)
+add_executable(SnapsApp ${sources})
+target_include_directories(SnapsApp PRIVATE src)
+target_link_libraries(SnapsApp PRIVATE raylib)
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/src FILES ${SOURCES})
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT BrickApp)
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT SnapsApp)

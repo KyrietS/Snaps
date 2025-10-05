@@ -2,7 +2,7 @@
 #include <raylib.h>
 #include "Constants.hpp"
 
-namespace Brick {
+namespace Snaps {
 struct Block {
 	Vector2 WorldPosition = {0, 0};
 	Vector2 Velocity = {0, 0};

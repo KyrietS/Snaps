@@ -1,3 +1,7 @@
-# Brick
+# Snaps
 
-Game engine for building games with fun physics simulation.
+Snaps is a physics engine where every object eventually "snaps" to a grid.
+
+## 🚧 Work in progress 🚧
+
+This project is currently a work in progress

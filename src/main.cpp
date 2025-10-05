@@ -13,7 +13,7 @@ constexpr Color STONE_COLOR = {128, 128, 128, 255};
 constexpr Color SAND_COLOR = {194, 178, 128, 255};
 
 
-namespace Brick {
+namespace Snaps {
 
 bool tick = false;
 
@@ -430,10 +430,10 @@ int main() {
 	constexpr int screenWidth = 800;
 	constexpr int screenHeight = 450;
 
-	InitWindow(screenWidth, screenHeight, "Simple Raylib Window - Brick App");
+	InitWindow(screenWidth, screenHeight, "Simple Raylib Window - Snaps App");
 	SetTargetFPS(60);
 
-	Brick::Grid grid(100, 100);
+	Snaps::Grid grid(100, 100);
 
 	InitializeMap(grid);
 
@@ -445,7 +445,7 @@ int main() {
 			SimulatePhysics(grid);
 			Draw(grid);
 			DrawUi(grid);
-			Brick::tick = false;
+			Snaps::tick = false;
 		}
 		EndDrawing();
 	}
