@@ -1,4 +1,6 @@
 #include "TestScenePreview.hpp"
+
+#include <algorithm>
 #include <raylib.h>
 
 namespace {
@@ -67,6 +69,7 @@ void TestScenePreview::DrawGridSelectionUi() {
 	const int historySize = static_cast<int>(m_Scene.GetGridHistory().size());
 	if (IsKeyPressed(KEY_LEFT) or IsKeyPressedRepeat(KEY_LEFT)) m_GridIndex = std::max(0, m_GridIndex - 1);
 	if (IsKeyPressed(KEY_RIGHT) or IsKeyPressedRepeat(KEY_RIGHT)) m_GridIndex = std::min(historySize, m_GridIndex + 1);
+	if (GetMouseWheelMove() != 0) m_GridIndex = std::clamp(m_GridIndex - static_cast<int>(GetMouseWheelMove()), 0, historySize);
 
 	const int gridIconSize = 4;
 	const int iconsBarWidth = (historySize + 1) * gridIconSize * 2;
