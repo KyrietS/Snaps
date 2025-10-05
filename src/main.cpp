@@ -194,6 +194,7 @@ void SolveMovementUp(Grid& grid, int& x, int& y, Block& block) {
 	if (wantsToMoveUp and blockAbove.has_value()) {
 		if (blockAbove->IsDynamic and not secondPass) {
 			upMovementContacts.push({x, y});
+			x = -999;
 		} else {
 			block.WorldPosition.y = static_cast<float>(y) * BOX_SIZE;
 			block.Velocity.y = 0;
@@ -330,6 +331,8 @@ void SolveGridPhysics(Grid& grid, int x, int y) {
 		SolveMovementDown(grid, x, y, movedBlock);
 	else
 		SolveMovementUp(grid, x, y, movedBlock);
+
+	if (x == -999) return; // will continue in second pass
 
 	// Mark as resolved so we don't try to resolve it again this frame.
 	movedBlock.NeedsCollisionResolution = false;
