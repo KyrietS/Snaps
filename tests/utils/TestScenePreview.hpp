@@ -3,14 +3,14 @@
 
 class TestScenePreview {
 public:
-	TestScenePreview(const TestScene& scene);
+    TestScenePreview(const TestScene& scene);
 
-	void Show();
+    void Show();
 
 private:
-	const Snaps::Grid& GetSelectedGrid() const;
-	void DrawGridSelectionUi();
+    const Snaps::Grid& GetSelectedGrid() const;
+    void DrawGridSelectionUi();
 
-	const TestScene& m_Scene;
-	int m_GridIndex = 0;
+    const TestScene& m_Scene;
+    int m_GridIndex = 0;
 };
