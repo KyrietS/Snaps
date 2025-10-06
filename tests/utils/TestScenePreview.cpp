@@ -9,28 +9,55 @@ std::pair<int, int> ToWindowCoordinates(const snaps::Block& block) {
     return {static_cast<int>(block.WorldPosition.x), static_cast<int>(block.WorldPosition.y)};
 }
 
+void DrawRect(const int gridScreenX, const int gridScreenY, const int gridScreenWidth, const int gridScreenHeight, const Color color) {
+    DrawLine(gridScreenX, gridScreenY, gridScreenX + gridScreenWidth, gridScreenY, color);
+    DrawLine(gridScreenX, gridScreenY + gridScreenHeight, gridScreenX + gridScreenWidth, gridScreenY + gridScreenHeight, color);
+    DrawLine(gridScreenX, gridScreenY, gridScreenX, gridScreenY + gridScreenHeight, color);
+    DrawLine(gridScreenX + gridScreenWidth, gridScreenY, gridScreenX + gridScreenWidth, gridScreenY + gridScreenHeight, color);
+}
+
 void DrawGrid(const snaps::Grid& grid) {
     const int width = grid.Width();
     const int height = grid.Height();
 
     // Draw border in the middle of the screen
-    const int gridScreenX = (GetScreenWidth() - width * snaps::BOX_SIZE) / 2;
-    const int gridScreenY = (GetScreenHeight() - height * snaps::BOX_SIZE) / 2;
+    const int gridOffsetX = (GetScreenWidth() - width * snaps::BOX_SIZE) / 2;
+    const int gridOffsetY = (GetScreenHeight() - height * snaps::BOX_SIZE) / 2;
     const int gridScreenWidth = width * snaps::BOX_SIZE;
     const int gridScreenHeight = height * snaps::BOX_SIZE;
+
+    Camera2D camera = {
+        .offset = Vector2{static_cast<float>(gridOffsetX), static_cast<float>(gridOffsetY)},
+        .rotation = 0.0f,
+        .target = {0.0f, 0.0f},
+        .zoom = 1.0f
+    };
+    BeginMode2D(camera);
 
     for (const auto& block : grid.Blocks()) {
         if (block.has_value()) {
             auto [x, y] = ToWindowCoordinates(*block);
-            DrawRectangle(x + gridScreenX, y + gridScreenY, snaps::BOX_SIZE, snaps::BOX_SIZE, block->FillColor);
+            DrawRectangle(x, y, snaps::BOX_SIZE, snaps::BOX_SIZE, block->FillColor);
+        }
+    }
+
+
+    // Draw claimed grids
+    for (int gridX = 0; gridX < width; gridX++) {
+        for (int gridY = 0; gridY < height; gridY++) {
+            const auto& block = grid[gridX, gridY];
+            if (block.has_value() and block->IsDynamic) {
+                const int x = gridX * snaps::BOX_SIZE;
+                const int y = gridY * snaps::BOX_SIZE;
+                DrawRect(x, y, snaps::BOX_SIZE, snaps::BOX_SIZE, RED);
+            }
         }
     }
 
     // Draw grid outline (don't use DrawRectangleLines because corner is broken)
-    DrawLine(gridScreenX, gridScreenY, gridScreenX + gridScreenWidth, gridScreenY, YELLOW);
-    DrawLine(gridScreenX, gridScreenY + gridScreenHeight, gridScreenX + gridScreenWidth, gridScreenY + gridScreenHeight, YELLOW);
-    DrawLine(gridScreenX, gridScreenY, gridScreenX, gridScreenY + gridScreenHeight, YELLOW);
-    DrawLine(gridScreenX + gridScreenWidth, gridScreenY, gridScreenX + gridScreenWidth, gridScreenY + gridScreenHeight, YELLOW);
+    DrawRect(0, 0, gridScreenWidth, gridScreenHeight, YELLOW);
+
+    EndMode2D();
 }
 }
 
