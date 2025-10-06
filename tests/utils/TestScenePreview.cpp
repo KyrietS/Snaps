@@ -93,6 +93,8 @@ void TestScenePreview::Show() {
     constexpr int screenHeight = 500;
 
     InitWindow(screenWidth, screenHeight, "Snaps Test Scene Preview");
+    SetWindowState(FLAG_WINDOW_RESIZABLE);
+    SetWindowMinSize(screenWidth, screenHeight);
     SetTargetFPS(60);
 
     while (!WindowShouldClose()) // Detect window close button or ESC key
