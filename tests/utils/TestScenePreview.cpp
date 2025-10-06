@@ -16,6 +16,15 @@ void DrawRect(const int gridScreenX, const int gridScreenY, const int gridScreen
     DrawLine(gridScreenX + gridScreenWidth, gridScreenY, gridScreenX + gridScreenWidth, gridScreenY + gridScreenHeight, color);
 }
 
+void DrawPixelGrid(const int gridWidth, const int gridHeight, const Color color) {
+    constexpr int pixelSize = 1;
+    for (int x = 0; x <= gridWidth; x += pixelSize) {
+        for (int y = 0; y <= gridHeight; y += pixelSize) {
+            DrawRect(x, y, pixelSize, pixelSize, color);
+        }
+    }
+}
+
 void DrawGrid(const snaps::Grid& grid) {
     const int width = grid.Width();
     const int height = grid.Height();
@@ -23,16 +32,28 @@ void DrawGrid(const snaps::Grid& grid) {
     // Draw border in the middle of the screen
     const int gridOffsetX = (GetScreenWidth() - width * snaps::BOX_SIZE) / 2;
     const int gridOffsetY = (GetScreenHeight() - height * snaps::BOX_SIZE) / 2;
-    const int gridScreenWidth = width * snaps::BOX_SIZE;
-    const int gridScreenHeight = height * snaps::BOX_SIZE;
+    const int gridWidth = width * snaps::BOX_SIZE;
+    const int gridHeight = height * snaps::BOX_SIZE;
 
     Camera2D camera = {
-        .offset = Vector2{static_cast<float>(gridOffsetX), static_cast<float>(gridOffsetY)},
+        .offset = Vector2{static_cast<float>(gridOffsetX) + static_cast<float>(gridWidth) / 2, static_cast<float>(gridOffsetY) + static_cast<float>(gridHeight) / 2},
+        .target = Vector2{static_cast<float>(gridWidth) / 2, static_cast<float>(gridWidth) / 2},
         .rotation = 0.0f,
-        .target = {0.0f, 0.0f},
-        .zoom = 1.0f
+        .zoom = 2.0f
     };
     BeginMode2D(camera);
+
+
+    Vector2 gridScreenPos = GetWorldToScreen2D({0.0f, 0.0f}, camera);
+    BeginScissorMode(
+        static_cast<int>(gridScreenPos.x) - 1,
+        static_cast<int>(gridScreenPos.y) - 1,
+        gridWidth * static_cast<int>(camera.zoom) + 2,
+        gridHeight * static_cast<int>(camera.zoom) + 2);
+
+    if (camera.zoom > 4.0f) {
+        DrawPixelGrid(gridWidth, gridHeight, Color(40, 40, 40, 255));
+    }
 
     for (const auto& block : grid.Blocks()) {
         if (block.has_value()) {
@@ -55,8 +76,9 @@ void DrawGrid(const snaps::Grid& grid) {
     }
 
     // Draw grid outline (don't use DrawRectangleLines because corner is broken)
-    DrawRect(0, 0, gridScreenWidth, gridScreenHeight, YELLOW);
+    DrawRect(0, 0, gridWidth, gridHeight, YELLOW);
 
+    EndScissorMode();
     EndMode2D();
 }
 }
