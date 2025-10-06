@@ -3,7 +3,7 @@
 #include <stack>
 
 
-namespace Snaps {
+namespace snaps {
 class SnapsEngine {
 public:
     SnapsEngine(Grid& grid);

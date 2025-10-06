@@ -4,7 +4,7 @@
 #include <raymath.h>
 #include <iostream>
 
-namespace Snaps {
+namespace snaps {
 struct Block {
     Vector2 WorldPosition = {0, 0};
     Vector2 Velocity = {0, 0};

@@ -14,7 +14,7 @@ constexpr Color STONE_COLOR = {128, 128, 128, 255};
 constexpr Color SAND_COLOR = {194, 178, 128, 255};
 
 
-namespace Snaps {
+namespace snaps {
 
 bool tick = false;
 
@@ -147,8 +147,8 @@ int main() {
     InitWindow(screenWidth, screenHeight, "Simple Raylib Window - Snaps App");
     SetTargetFPS(60);
 
-    Snaps::Grid grid(100, 100);
-    Snaps::SnapsEngine engine(grid);
+    snaps::Grid grid(100, 100);
+    snaps::SnapsEngine engine(grid);
 
     InitializeMap(grid);
 
@@ -157,10 +157,10 @@ int main() {
         BeginDrawing(); {
             ClearBackground(BLACK);
             HandleInput(grid);
-            engine.Step(Snaps::DeltaTime());
+            engine.Step(snaps::DeltaTime());
             Draw(grid);
             DrawUi(grid);
-            Snaps::tick = false;
+            snaps::tick = false;
         }
         EndDrawing();
     }

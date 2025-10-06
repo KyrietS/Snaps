@@ -4,7 +4,7 @@
 
 class TestScene {
 public:
-    TestScene(Snaps::SnapsEngine& engine, Snaps::Grid& grid);
+    TestScene(snaps::SnapsEngine& engine, snaps::Grid& grid);
 
     void Tick();
     void Tick(int numberOfTicks);
@@ -12,15 +12,15 @@ public:
 
     void SetDeltaTime(float newDeltaTime);
 
-    const Snaps::Grid& GetCurrentGrid() const;
-    const std::deque<Snaps::Grid>& GetGridHistory() const;
+    const snaps::Grid& GetCurrentGrid() const;
+    const std::deque<snaps::Grid>& GetGridHistory() const;
 
 private:
-    Snaps::SnapsEngine& m_Engine;
-    Snaps::Grid& m_Grid;
+    snaps::SnapsEngine& m_Engine;
+    snaps::Grid& m_Grid;
 
     float m_DeltaTime = 1.0f / 60.0f;
     std::optional<int> m_BreakAtTick;
-    std::deque<Snaps::Grid> m_GridHistory;
+    std::deque<snaps::Grid> m_GridHistory;
 };
 

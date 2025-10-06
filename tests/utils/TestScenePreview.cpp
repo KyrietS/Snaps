@@ -5,24 +5,24 @@
 
 namespace {
 
-std::pair<int, int> ToWindowCoordinates(const Snaps::Block& block) {
+std::pair<int, int> ToWindowCoordinates(const snaps::Block& block) {
     return {static_cast<int>(block.WorldPosition.x), static_cast<int>(block.WorldPosition.y)};
 }
 
-void DrawGrid(const Snaps::Grid& grid) {
+void DrawGrid(const snaps::Grid& grid) {
     const int width = grid.Width();
     const int height = grid.Height();
 
     // Draw border in the middle of the screen
-    const int gridScreenX = (GetScreenWidth() - width * Snaps::BOX_SIZE) / 2;
-    const int gridScreenY = (GetScreenHeight() - height * Snaps::BOX_SIZE) / 2;
-    const int gridScreenWidth = width * Snaps::BOX_SIZE;
-    const int gridScreenHeight = height * Snaps::BOX_SIZE;
+    const int gridScreenX = (GetScreenWidth() - width * snaps::BOX_SIZE) / 2;
+    const int gridScreenY = (GetScreenHeight() - height * snaps::BOX_SIZE) / 2;
+    const int gridScreenWidth = width * snaps::BOX_SIZE;
+    const int gridScreenHeight = height * snaps::BOX_SIZE;
 
     for (const auto& block : grid.Blocks()) {
         if (block.has_value()) {
             auto [x, y] = ToWindowCoordinates(*block);
-            DrawRectangle(x + gridScreenX, y + gridScreenY, Snaps::BOX_SIZE, Snaps::BOX_SIZE, block->FillColor);
+            DrawRectangle(x + gridScreenX, y + gridScreenY, snaps::BOX_SIZE, snaps::BOX_SIZE, block->FillColor);
         }
     }
 
@@ -60,7 +60,7 @@ void TestScenePreview::Show() {
     CloseWindow();
 }
 
-const Snaps::Grid & TestScenePreview::GetSelectedGrid() const {
+const snaps::Grid & TestScenePreview::GetSelectedGrid() const {
     if (m_GridIndex == m_Scene.GetGridHistory().size()) return m_Scene.GetCurrentGrid();
     return m_Scene.GetGridHistory().at(m_GridIndex);
 }

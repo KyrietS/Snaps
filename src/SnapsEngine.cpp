@@ -6,7 +6,7 @@
 
 
 
-namespace Snaps {
+namespace snaps {
 
 namespace {
 bool TouchesFloor(const Grid& grid, const int x, const int y, const Block& block) {

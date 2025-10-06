@@ -1,7 +1,7 @@
 #include "TestScene.hpp"
 #include "DebugBreak.hpp"
 
-TestScene::TestScene(Snaps::SnapsEngine& engine, Snaps::Grid& grid)
+TestScene::TestScene(snaps::SnapsEngine& engine, snaps::Grid& grid)
     : m_Engine(engine)
     , m_Grid(grid)
 {}
@@ -28,10 +28,10 @@ void TestScene::SetDeltaTime(const float dt) {
     m_DeltaTime = dt;
 }
 
-const Snaps::Grid& TestScene::GetCurrentGrid() const {
+const snaps::Grid& TestScene::GetCurrentGrid() const {
     return m_Grid;
 }
 
-const std::deque<Snaps::Grid>& TestScene::GetGridHistory() const {
+const std::deque<snaps::Grid>& TestScene::GetGridHistory() const {
     return m_GridHistory;
 }

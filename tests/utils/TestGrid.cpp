@@ -4,12 +4,12 @@ namespace {
 
 constexpr Color STONE_COLOR = {128, 128, 128, 255};
 
-Snaps::Block CopyAtPos(Snaps::Block block, int x, int y) {
-    block.WorldPosition = {static_cast<float>(x) * Snaps::BOX_SIZE, static_cast<float>(y) * Snaps::BOX_SIZE};
+snaps::Block CopyAtPos(snaps::Block block, int x, int y) {
+    block.WorldPosition = {static_cast<float>(x) * snaps::BOX_SIZE, static_cast<float>(y) * snaps::BOX_SIZE};
     return block;
 }
 
-void AddBorder(Snaps::Grid& grid, Snaps::Block block) {
+void AddBorder(snaps::Grid& grid, snaps::Block block) {
     // Top and bottom
     for (int x = 0; x < grid.Width(); x++) {
         grid[x, 0] = CopyAtPos(block, x, 0);
@@ -23,9 +23,9 @@ void AddBorder(Snaps::Grid& grid, Snaps::Block block) {
 }
 }
 
-Snaps::Grid MakeTestGrid(int width, int height) {
-    Snaps::Grid grid(width, height);
-    Snaps::Block block {
+snaps::Grid MakeTestGrid(int width, int height) {
+    snaps::Grid grid(width, height);
+    snaps::Block block {
         .FillColor = STONE_COLOR,
         .IsDynamic = false
     };
