@@ -56,7 +56,7 @@ void TestScenePreview::Show() {
             HandleInput();
 
             ClearBackground(BLACK);
-            ShowGrid();
+            ShowFramePreview();
             ShowButtons();
             ShowFramePaginationBar();
             ShowHelp();
@@ -82,6 +82,8 @@ void TestScenePreview::HandleInput() {
     }
     if (IsKeyPressed(KEY_HOME)) SelectFirstFrame();
     if (IsKeyPressed(KEY_END)) SelectLastFrame();
+
+    if (IsMouseButtonDown(MOUSE_BUTTON_MIDDLE)) m_PreviewOffset += GetMouseDelta();
 }
 
 const snaps::Grid & TestScenePreview::GetSelectedGrid() const {
@@ -114,19 +116,18 @@ float TestScenePreview::GetZoomLevel() const {
     return m_ZoomLevelIndex == 0 ? 1.0f : std::powf(static_cast<float>(m_ZoomLevelIndex) + 1, 2.0f);
 }
 
-void TestScenePreview::ShowGrid() {
+void TestScenePreview::ShowFramePreview() {
     const snaps::Grid& grid = GetSelectedGrid();
     const int width = grid.Width();
     const int height = grid.Height();
 
     // Draw border in the middle of the screen
-    const int gridOffsetX = (GetScreenWidth() - width * snaps::BOX_SIZE) / 2;
-    const int gridOffsetY = (GetScreenHeight() - height * snaps::BOX_SIZE) / 2;
+    const Vector2 previewPos = {static_cast<float>(GetScreenWidth()) / 2, static_cast<float>(GetScreenHeight()) / 2};
     const int gridWidth = width * snaps::BOX_SIZE;
     const int gridHeight = height * snaps::BOX_SIZE;
 
     const Camera2D camera = {
-        .offset = Vector2{static_cast<float>(gridOffsetX) + static_cast<float>(gridWidth) / 2, static_cast<float>(gridOffsetY) + static_cast<float>(gridHeight) / 2},
+        .offset = previewPos + m_PreviewOffset,
         .target = Vector2{static_cast<float>(gridWidth) / 2, static_cast<float>(gridWidth) / 2},
         .rotation = 0.0f,
         .zoom = GetZoomLevel()
@@ -210,17 +211,26 @@ void TestScenePreview::ShowHelp() {
     if (not m_ShowHelp) return;
 
     float textY = GetScreenHeight() - 60;
-    GuiDrawText("Prev frame: Left / Scroll Up", {10, textY, 200, 10}, TEXT_ALIGN_LEFT, WHITE);
-    textY -= 20;
-    GuiDrawText("Next frame: Right / Scroll Down", {10, textY, 200, 10}, TEXT_ALIGN_LEFT, WHITE);
-    textY -= 20;
-    GuiDrawText("Last frame: End", {10, textY, 200, 10}, TEXT_ALIGN_LEFT, WHITE);
-    textY -= 20;
-    GuiDrawText("First frame: Home", {10, textY, 200, 10}, TEXT_ALIGN_LEFT, WHITE);
-    textY -= 20;
-    GuiDrawText("Quit: Escape", {10, textY, 200, 10}, TEXT_ALIGN_LEFT, WHITE);
-    textY -= 20;
-    GuiDrawText("Play: Space", {10, textY, 200, 10}, TEXT_ALIGN_LEFT, WHITE);
+    Rectangle helpLineRect = {
+        .x = 10,
+        .y = static_cast<float>(GetScreenWidth()) - 60,
+        .width = static_cast<float>(GetScreenWidth()) - 50,
+        .height = 10
+    };
+
+    GuiDrawText("Move camera: Middle Mouse Button", helpLineRect, TEXT_ALIGN_LEFT, WHITE);
+    helpLineRect.y -= 20;
+    GuiDrawText("Prev frame: Left / Scroll Up", helpLineRect, TEXT_ALIGN_LEFT, WHITE);
+    helpLineRect.y -= 20;
+    GuiDrawText("Next frame: Right / Scroll Down", helpLineRect, TEXT_ALIGN_LEFT, WHITE);
+    helpLineRect.y -= 20;
+    GuiDrawText("Last frame: End", helpLineRect, TEXT_ALIGN_LEFT, WHITE);
+    helpLineRect.y -= 20;
+    GuiDrawText("First frame: Home", helpLineRect, TEXT_ALIGN_LEFT, WHITE);
+    helpLineRect.y -= 20;
+    GuiDrawText("Quit: Escape", helpLineRect, TEXT_ALIGN_LEFT, WHITE);
+    helpLineRect.y -= 20;
+    GuiDrawText("Play: Space", helpLineRect, TEXT_ALIGN_LEFT, WHITE);
 }
 
 void TestScenePreview::PlaySimulation() {

@@ -10,7 +10,7 @@ public:
 private:
     void HandleInput();
 
-    void ShowGrid();
+    void ShowFramePreview();
     void ShowFramePaginationBar();
     void PlaySimulation();
 
@@ -37,5 +37,5 @@ private:
     int m_ZoomLevelIndex = 0;
     bool m_IsPlaying = false;
     bool m_ShowHelp = false;
-
+    Vector2 m_PreviewOffset = {0, 0};
 };
