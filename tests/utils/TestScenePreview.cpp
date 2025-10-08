@@ -116,12 +116,17 @@ const snaps::Grid & TestScenePreview::GetSelectedGrid() const {
     return m_Scene.GetGridHistory().at(m_GridIndex);
 }
 
-void TestScenePreview::DrawGridSelectionUi() {
+void TestScenePreview::ShowGridSelectionUi() {
     const int historySize = static_cast<int>(m_Scene.GetGridHistory().size());
     if (IsKeyPressed(KEY_LEFT) or IsKeyPressedRepeat(KEY_LEFT)) m_GridIndex = std::max(0, m_GridIndex - 1);
     if (IsKeyPressed(KEY_RIGHT) or IsKeyPressedRepeat(KEY_RIGHT)) m_GridIndex = std::min(historySize, m_GridIndex + 1);
     if (GetMouseWheelMove() != 0) m_GridIndex = std::clamp(m_GridIndex - static_cast<int>(GetMouseWheelMove()), 0, historySize);
 
+    ShowGridSelectionBar();
+}
+
+void TestScenePreview::ShowGridSelectionBar() {
+    const int historySize = static_cast<int>(m_Scene.GetGridHistory().size());
     const int gridIconSize = 4;
     const int iconsBarWidth = (historySize + 1) * gridIconSize * 2;
     int iconsBarCenterOffset = (GetScreenWidth() - iconsBarWidth) / 2;
@@ -138,6 +143,7 @@ void TestScenePreview::DrawGridSelectionUi() {
             gridIconY += gridIconSize * 2;
         }
         const Color color = (i == m_GridIndex) ? GREEN : GRAY;
+        DrawRectangle(gridIconX - 1, gridIconY - 1, gridIconSize + 2, gridIconSize + 2, BLACK);
         DrawRectangle(gridIconX, gridIconY, gridIconSize, gridIconSize, color);
         gridIconX += gridIconSize * 2;
     }
