@@ -113,7 +113,7 @@ bool TestScenePreview::IsAtLastFrame() const {
 }
 
 float TestScenePreview::GetZoomLevel() const {
-    return m_ZoomLevelIndex == 0 ? 1.0f : std::powf(static_cast<float>(m_ZoomLevelIndex) + 1, 2.0f);
+    return m_ZoomLevelIndex == 0 ? 1.0f : std::powf( 2.0f, static_cast<float>(m_ZoomLevelIndex) + 1);
 }
 
 void TestScenePreview::ShowFramePreview() {
@@ -210,7 +210,6 @@ void TestScenePreview::ShowFramePaginationBar() {
 void TestScenePreview::ShowHelp() {
     if (not m_ShowHelp) return;
 
-    float textY = GetScreenHeight() - 60;
     Rectangle helpLineRect = {
         .x = 10,
         .y = static_cast<float>(GetScreenHeight()) - 60,
