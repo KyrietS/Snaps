@@ -14,6 +14,7 @@ public:
 
     const snaps::Grid& GetCurrentGrid() const;
     const std::deque<snaps::Grid>& GetGridHistory() const;
+    float GetDeltaTime() const { return m_DeltaTime; }
 
 private:
     snaps::SnapsEngine& m_Engine;

@@ -14,3 +14,4 @@ add_executable(SnapsTests
         utils/TestScenePreview.hpp
 )
 target_link_libraries(SnapsTests PRIVATE Snaps raylib)
+target_include_directories(SnapsTests SYSTEM PRIVATE external)

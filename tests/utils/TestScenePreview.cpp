@@ -3,6 +3,10 @@
 #include <algorithm>
 #include <raylib.h>
 
+#define RAYGUI_IMPLEMENTATION
+#include <raygui/raygui.h>
+#include <raygui/style_dark.h>
+
 namespace {
 
 std::pair<int, int> ToWindowCoordinates(const snaps::Block& block) {
@@ -24,8 +28,94 @@ void DrawPixelGrid(const int gridWidth, const int gridHeight, const Color color)
         }
     }
 }
+}
 
-void DrawGrid(const snaps::Grid& grid) {
+TestScenePreview::TestScenePreview(const TestScene &scene)
+    : m_Scene(scene)
+    , m_SelectedFrameIndex(static_cast<int>(m_Scene.GetGridHistory().size()))
+{}
+
+void TestScenePreview::Show() {
+    constexpr int screenWidth = 500;
+    constexpr int screenHeight = 500;
+
+    InitWindow(screenWidth, screenHeight, "Snaps Test Scene Preview");
+    SetWindowState(FLAG_WINDOW_RESIZABLE);
+    SetWindowMinSize(screenWidth, screenHeight);
+    SetTargetFPS(1.0f / m_Scene.GetDeltaTime());
+
+    // Raygui
+    GuiLoadStyleDark();
+    GuiEnableTooltip();
+
+
+    while (!WindowShouldClose()) // Detect window close button or ESC key
+    {
+        BeginDrawing();
+        {
+            HandleInput();
+
+            ClearBackground(BLACK);
+            ShowGrid();
+            ShowButtons();
+            ShowFramePaginationBar();
+            ShowHelp();
+
+            PlaySimulation();
+        }
+        EndDrawing();
+    }
+
+    CloseWindow();
+}
+
+void TestScenePreview::HandleInput() {
+    if (IsKeyPressed(KEY_LEFT) or IsKeyPressedRepeat(KEY_LEFT)) SelectPreviousFrame();
+    if (IsKeyPressed(KEY_RIGHT) or IsKeyPressedRepeat(KEY_RIGHT)) SelectNextFrame();
+    if (GetMouseWheelMove() != 0) GetMouseWheelMove() > 0 ? SelectPreviousFrame() : SelectNextFrame();
+
+    if (IsKeyPressed(KEY_SPACE)) {
+        m_IsPlaying = not m_IsPlaying;
+        if (m_IsPlaying and IsAtLastFrame()) {
+            SelectFirstFrame();
+        }
+    }
+    if (IsKeyPressed(KEY_HOME)) SelectFirstFrame();
+    if (IsKeyPressed(KEY_END)) SelectLastFrame();
+}
+
+const snaps::Grid & TestScenePreview::GetSelectedGrid() const {
+    if (m_SelectedFrameIndex == m_Scene.GetGridHistory().size()) return m_Scene.GetCurrentGrid();
+    return m_Scene.GetGridHistory().at(m_SelectedFrameIndex);
+}
+
+void TestScenePreview::SelectNextFrame() {
+    const int historySize = static_cast<int>(m_Scene.GetGridHistory().size());
+    m_SelectedFrameIndex = std::min(historySize, m_SelectedFrameIndex + 1);
+}
+
+void TestScenePreview::SelectPreviousFrame() {
+    m_SelectedFrameIndex = std::max(0, m_SelectedFrameIndex - 1);
+}
+
+void TestScenePreview::SelectFirstFrame() {
+    m_SelectedFrameIndex = 0;
+}
+
+void TestScenePreview::SelectLastFrame() {
+    m_SelectedFrameIndex = m_Scene.GetGridHistory().size();
+}
+
+bool TestScenePreview::IsAtLastFrame() const {
+    return m_SelectedFrameIndex == m_Scene.GetGridHistory().size();
+}
+
+float TestScenePreview::GetZoomLevel() const {
+    return m_ZoomLevelIndex == 0 ? 1.0f : std::powf(static_cast<float>(m_ZoomLevelIndex) + 1, 2.0f);
+}
+
+void TestScenePreview::ShowGrid() {
+    const snaps::Grid& grid = GetSelectedGrid();
     const int width = grid.Width();
     const int height = grid.Height();
 
@@ -35,11 +125,11 @@ void DrawGrid(const snaps::Grid& grid) {
     const int gridWidth = width * snaps::BOX_SIZE;
     const int gridHeight = height * snaps::BOX_SIZE;
 
-    Camera2D camera = {
+    const Camera2D camera = {
         .offset = Vector2{static_cast<float>(gridOffsetX) + static_cast<float>(gridWidth) / 2, static_cast<float>(gridOffsetY) + static_cast<float>(gridHeight) / 2},
         .target = Vector2{static_cast<float>(gridWidth) / 2, static_cast<float>(gridWidth) / 2},
         .rotation = 0.0f,
-        .zoom = 2.0f
+        .zoom = GetZoomLevel()
     };
     BeginMode2D(camera);
 
@@ -81,51 +171,14 @@ void DrawGrid(const snaps::Grid& grid) {
     EndScissorMode();
     EndMode2D();
 }
+
+void TestScenePreview::ShowButtons() {
+    ShowZoomButtons();
+    ShowReplayButtons();
+    ShowHelpButton();
 }
 
-TestScenePreview::TestScenePreview(const TestScene &scene)
-    : m_Scene(scene)
-    , m_GridIndex(static_cast<int>(m_Scene.GetGridHistory().size()))
-{}
-
-void TestScenePreview::Show() {
-    constexpr int screenWidth = 500;
-    constexpr int screenHeight = 500;
-
-    InitWindow(screenWidth, screenHeight, "Snaps Test Scene Preview");
-    SetWindowState(FLAG_WINDOW_RESIZABLE);
-    SetWindowMinSize(screenWidth, screenHeight);
-    SetTargetFPS(60);
-
-    while (!WindowShouldClose()) // Detect window close button or ESC key
-    {
-        BeginDrawing();
-        {
-            ClearBackground(BLACK);
-            DrawGrid(GetSelectedGrid());
-            DrawGridSelectionUi();
-        }
-        EndDrawing();
-    }
-
-    CloseWindow();
-}
-
-const snaps::Grid & TestScenePreview::GetSelectedGrid() const {
-    if (m_GridIndex == m_Scene.GetGridHistory().size()) return m_Scene.GetCurrentGrid();
-    return m_Scene.GetGridHistory().at(m_GridIndex);
-}
-
-void TestScenePreview::ShowGridSelectionUi() {
-    const int historySize = static_cast<int>(m_Scene.GetGridHistory().size());
-    if (IsKeyPressed(KEY_LEFT) or IsKeyPressedRepeat(KEY_LEFT)) m_GridIndex = std::max(0, m_GridIndex - 1);
-    if (IsKeyPressed(KEY_RIGHT) or IsKeyPressedRepeat(KEY_RIGHT)) m_GridIndex = std::min(historySize, m_GridIndex + 1);
-    if (GetMouseWheelMove() != 0) m_GridIndex = std::clamp(m_GridIndex - static_cast<int>(GetMouseWheelMove()), 0, historySize);
-
-    ShowGridSelectionBar();
-}
-
-void TestScenePreview::ShowGridSelectionBar() {
+void TestScenePreview::ShowFramePaginationBar() {
     const int historySize = static_cast<int>(m_Scene.GetGridHistory().size());
     const int gridIconSize = 4;
     const int iconsBarWidth = (historySize + 1) * gridIconSize * 2;
@@ -142,7 +195,7 @@ void TestScenePreview::ShowGridSelectionBar() {
             gridIconX = gridIconSize + iconsBarCenterOffset;
             gridIconY += gridIconSize * 2;
         }
-        const Color color = (i == m_GridIndex) ? GREEN : GRAY;
+        const Color color = (i == m_SelectedFrameIndex) ? GREEN : GRAY;
         DrawRectangle(gridIconX - 1, gridIconY - 1, gridIconSize + 2, gridIconSize + 2, BLACK);
         DrawRectangle(gridIconX, gridIconY, gridIconSize, gridIconSize, color);
         gridIconX += gridIconSize * 2;
@@ -150,5 +203,71 @@ void TestScenePreview::ShowGridSelectionBar() {
 
     const int textX = 10;
     const int textY = GetScreenHeight() - 30;
-    DrawText(TextFormat("%d / %d", m_GridIndex, historySize), textX, textY, 20, WHITE);
+    DrawText(TextFormat("%d / %d", m_SelectedFrameIndex, historySize), textX, textY, 20, WHITE);
+}
+
+void TestScenePreview::ShowHelp() {
+    if (not m_ShowHelp) return;
+
+    float textY = GetScreenHeight() - 60;
+    GuiDrawText("Prev frame: Left / Scroll Up", {10, textY, 200, 10}, TEXT_ALIGN_LEFT, WHITE);
+    textY -= 20;
+    GuiDrawText("Next frame: Right / Scroll Down", {10, textY, 200, 10}, TEXT_ALIGN_LEFT, WHITE);
+    textY -= 20;
+    GuiDrawText("Last frame: End", {10, textY, 200, 10}, TEXT_ALIGN_LEFT, WHITE);
+    textY -= 20;
+    GuiDrawText("First frame: Home", {10, textY, 200, 10}, TEXT_ALIGN_LEFT, WHITE);
+    textY -= 20;
+    GuiDrawText("Quit: Escape", {10, textY, 200, 10}, TEXT_ALIGN_LEFT, WHITE);
+    textY -= 20;
+    GuiDrawText("Play: Space", {10, textY, 200, 10}, TEXT_ALIGN_LEFT, WHITE);
+}
+
+void TestScenePreview::PlaySimulation() {
+    if (not m_IsPlaying) return;
+
+    SelectNextFrame();
+    if (IsAtLastFrame()) {
+        m_IsPlaying = false;
+    }
+}
+
+void TestScenePreview::ShowZoomButtons() {
+    constexpr int zoomButtonsGroupHeight = 4 * (30 + 2);
+    const Rectangle zoomButtonRect = {
+        .x = static_cast<float>(GetScreenWidth()) - 35,
+        .y = static_cast<float>(GetScreenHeight()) - zoomButtonsGroupHeight - 5 - 35,
+        .width = 30,
+        .height = 30
+    };
+    GuiToggleGroup(zoomButtonRect, "x1\nx4\nx8\nx16", &m_ZoomLevelIndex);
+}
+
+void TestScenePreview::ShowReplayButtons() {
+    const float buttonsBarY = GetScreenHeight() - 35;
+    const float playButtonX = static_cast<float>(GetScreenWidth()) / 2 - 15;
+    if (m_IsPlaying) {
+        GuiToggle({playButtonX, buttonsBarY, 30, 30}, GuiIconText(ICON_PLAYER_PAUSE, nullptr), &m_IsPlaying);
+    } else {
+        GuiToggle({playButtonX, buttonsBarY, 30, 30}, GuiIconText(ICON_PLAYER_PLAY, nullptr), &m_IsPlaying);
+        if (m_IsPlaying and IsAtLastFrame()) {
+            SelectFirstFrame();
+        }
+    }
+    if (GuiButton({playButtonX - 35, buttonsBarY, 30, 30}, GuiIconText(ICON_PLAYER_PREVIOUS, nullptr))) {
+        SelectPreviousFrame();
+    }
+    if (GuiButton({playButtonX + 35, buttonsBarY, 30, 30}, GuiIconText(ICON_PLAYER_NEXT, nullptr))) {
+        SelectNextFrame();
+    }
+}
+
+void TestScenePreview::ShowHelpButton() {
+    const Rectangle helpButtonRect = {
+        .x = static_cast<float>(GetScreenWidth()) - 35,
+        .y = static_cast<float>(GetScreenHeight()) - 35,
+        .width = 30,
+        .height = 30
+    };
+    GuiToggle(helpButtonRect, GuiIconText(ICON_HELP, nullptr), &m_ShowHelp);
 }

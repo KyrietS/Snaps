@@ -8,11 +8,34 @@ public:
     void Show();
 
 private:
-    const snaps::Grid& GetSelectedGrid() const;
+    void HandleInput();
 
-    void ShowGridSelectionUi();
-    void ShowGridSelectionBar();
+    void ShowGrid();
+    void ShowFramePaginationBar();
+    void PlaySimulation();
+
+    const snaps::Grid& GetSelectedGrid() const;
+    void SelectNextFrame();
+    void SelectPreviousFrame();
+    void SelectFirstFrame();
+    void SelectLastFrame();
+    bool IsAtLastFrame() const;
+
+    float GetZoomLevel() const;
+
+    // UI
+    void ShowZoomButtons();
+    void ShowReplayButtons();
+    void ShowHelpButton();
+    void ShowButtons();
+    void ShowHelp();
 
     const TestScene& m_Scene;
-    int m_GridIndex = 0;
+
+    // UI state
+    int m_SelectedFrameIndex = 0;
+    int m_ZoomLevelIndex = 0;
+    bool m_IsPlaying = false;
+    bool m_ShowHelp = false;
+
 };
