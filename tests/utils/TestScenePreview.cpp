@@ -213,7 +213,7 @@ void TestScenePreview::ShowHelp() {
     float textY = GetScreenHeight() - 60;
     Rectangle helpLineRect = {
         .x = 10,
-        .y = static_cast<float>(GetScreenWidth()) - 60,
+        .y = static_cast<float>(GetScreenHeight()) - 60,
         .width = static_cast<float>(GetScreenWidth()) - 50,
         .height = 10
     };
