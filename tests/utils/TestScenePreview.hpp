@@ -11,31 +11,29 @@ private:
     void HandleInput();
 
     // Preview
-    Camera2D GetPreviewCamera() const;
-
-    void HandlePreviewInput();
-    void DrawFramePreview();
-
     void ShowFramePreview();
     void ShowFramePaginationBar();
-    void PlaySimulation();
+    void HandlePreviewInput();
+    void DrawFramePreview();
+    Camera2D GetPreviewCamera() const;
+    float GetZoomLevel() const;
 
+    // Frame control
     const snaps::Grid& GetSelectedGrid() const;
     void SelectNextFrame();
     void SelectPreviousFrame();
     void SelectFirstFrame();
     void SelectLastFrame();
     bool IsAtLastFrame() const;
-
-    float GetZoomLevel() const;
+    void PlaySimulation();
 
     // UI
     void ShowGui();
     void ShowButtons();
-    void ShowHelp() const;
     void ShowZoomButtons();
     void ShowReplayButtons();
     void ShowHelpButton();
+    void ShowHelp() const;
 
     bool AreAllGridsSameSize() const;
 

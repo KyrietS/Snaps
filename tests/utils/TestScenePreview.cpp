@@ -9,7 +9,6 @@
 #include <raygui/style_dark.h>
 
 namespace {
-
 std::pair<int, int> ToWindowCoordinates(const snaps::Block& block) {
     return {static_cast<int>(block.WorldPosition.x), static_cast<int>(block.WorldPosition.y)};
 }
@@ -86,23 +85,47 @@ void TestScenePreview::HandleInput() {
     if (IsMouseButtonDown(MOUSE_BUTTON_MIDDLE)) m_PreviewOffset += GetMouseDelta();
 }
 
-Camera2D TestScenePreview::GetPreviewCamera() const {
-    const snaps::Grid& grid = GetSelectedGrid();
-    const int width = grid.Width();
-    const int height = grid.Height();
+void TestScenePreview::ShowFramePreview() {
+    HandlePreviewInput();
+    const Camera2D camera = GetPreviewCamera();
+    BeginMode2D(camera);
+    auto [x, y] = GetWorldToScreen2D({0.0f, 0.0f}, camera) - Vector2{1, 1};
+    const int scissorX = static_cast<int>(x);
+    const int scissorY = static_cast<int>(y);
+    const int scissorWidth = GetSelectedGrid().Width() * snaps::BOX_SIZE * static_cast<int>(camera.zoom) + 2;
+    const int scissorHeight = GetSelectedGrid().Height() * snaps::BOX_SIZE * static_cast<int>(camera.zoom) + 2;
+    BeginScissorMode(scissorX, scissorY, scissorWidth, scissorHeight);
+    DrawFramePreview();
+    EndScissorMode();
+    EndMode2D();
+}
 
-    const Vector2 previewPos = {static_cast<float>(GetScreenWidth()) / 2, static_cast<float>(GetScreenHeight()) / 2};
-    const int gridWidth = width * snaps::BOX_SIZE;
-    const int gridHeight = height * snaps::BOX_SIZE;
+void TestScenePreview::ShowFramePaginationBar() {
+    const int historySize = static_cast<int>(m_Scene.GetGridHistory().size());
+    const int gridIconSize = 4;
+    const int iconsBarWidth = (historySize + 1) * gridIconSize * 2;
+    int iconsBarCenterOffset = (GetScreenWidth() - iconsBarWidth) / 2;
+    if (iconsBarWidth > GetScreenWidth()) {
+        iconsBarCenterOffset = 0;
+    }
 
-    const Camera2D camera = {
-        .offset = previewPos + m_PreviewOffset,
-        .target = Vector2{static_cast<float>(gridWidth) / 2, static_cast<float>(gridHeight) / 2},
-        .rotation = 0.0f,
-        .zoom = GetZoomLevel()
-    };
+    int gridIconX = gridIconSize + iconsBarCenterOffset;
+    int gridIconY = gridIconSize;
 
-    return camera;
+    for (int i = 0; i <= historySize; i++) {
+        if (gridIconX + gridIconSize > GetScreenWidth()) {
+            gridIconX = gridIconSize + iconsBarCenterOffset;
+            gridIconY += gridIconSize * 2;
+        }
+        const Color color = (i == m_SelectedFrameIndex) ? GREEN : GRAY;
+        DrawRectangle(gridIconX - 1, gridIconY - 1, gridIconSize + 2, gridIconSize + 2, BLACK);
+        DrawRectangle(gridIconX, gridIconY, gridIconSize, gridIconSize, color);
+        gridIconX += gridIconSize * 2;
+    }
+
+    const int textX = 10;
+    const int textY = GetScreenHeight() - 30;
+    DrawText(TextFormat("%d / %d", m_SelectedFrameIndex, historySize), textX, textY, 20, WHITE);
 }
 
 void TestScenePreview::HandlePreviewInput() {
@@ -171,6 +194,29 @@ void TestScenePreview::DrawFramePreview() {
     DrawRect(0, 0, gridWidth, gridHeight, YELLOW);
 }
 
+Camera2D TestScenePreview::GetPreviewCamera() const {
+    const snaps::Grid& grid = GetSelectedGrid();
+    const int width = grid.Width();
+    const int height = grid.Height();
+
+    const Vector2 previewPos = {static_cast<float>(GetScreenWidth()) / 2, static_cast<float>(GetScreenHeight()) / 2};
+    const int gridWidth = width * snaps::BOX_SIZE;
+    const int gridHeight = height * snaps::BOX_SIZE;
+
+    const Camera2D camera = {
+        .offset = previewPos + m_PreviewOffset,
+        .target = Vector2{static_cast<float>(gridWidth) / 2, static_cast<float>(gridHeight) / 2},
+        .rotation = 0.0f,
+        .zoom = GetZoomLevel()
+    };
+
+    return camera;
+}
+
+float TestScenePreview::GetZoomLevel() const {
+    return m_ZoomLevelIndex == 0 ? 1.0f : std::powf( 2.0f, static_cast<float>(m_ZoomLevelIndex) + 1);
+}
+
 const snaps::Grid & TestScenePreview::GetSelectedGrid() const {
     if (m_SelectedFrameIndex == m_Scene.GetGridHistory().size()) return m_Scene.GetCurrentGrid();
     return m_Scene.GetGridHistory().at(m_SelectedFrameIndex);
@@ -197,89 +243,6 @@ bool TestScenePreview::IsAtLastFrame() const {
     return m_SelectedFrameIndex == m_Scene.GetGridHistory().size();
 }
 
-float TestScenePreview::GetZoomLevel() const {
-    return m_ZoomLevelIndex == 0 ? 1.0f : std::powf( 2.0f, static_cast<float>(m_ZoomLevelIndex) + 1);
-}
-
-void TestScenePreview::ShowGui() {
-    ShowButtons();
-    ShowHelp();
-}
-
-void TestScenePreview::ShowFramePreview() {
-    HandlePreviewInput();
-    const Camera2D camera = GetPreviewCamera();
-    BeginMode2D(camera);
-    auto [x, y] = GetWorldToScreen2D({0.0f, 0.0f}, camera) - Vector2{1, 1};
-    const int scissorX = static_cast<int>(x);
-    const int scissorY = static_cast<int>(y);
-    const int scissorWidth = GetSelectedGrid().Width() * snaps::BOX_SIZE * static_cast<int>(camera.zoom) + 2;
-    const int scissorHeight = GetSelectedGrid().Height() * snaps::BOX_SIZE * static_cast<int>(camera.zoom) + 2;
-    BeginScissorMode(scissorX, scissorY, scissorWidth, scissorHeight);
-    DrawFramePreview();
-    EndScissorMode();
-    EndMode2D();
-}
-
-void TestScenePreview::ShowButtons() {
-    ShowZoomButtons();
-    ShowReplayButtons();
-    ShowHelpButton();
-}
-
-void TestScenePreview::ShowFramePaginationBar() {
-    const int historySize = static_cast<int>(m_Scene.GetGridHistory().size());
-    const int gridIconSize = 4;
-    const int iconsBarWidth = (historySize + 1) * gridIconSize * 2;
-    int iconsBarCenterOffset = (GetScreenWidth() - iconsBarWidth) / 2;
-    if (iconsBarWidth > GetScreenWidth()) {
-        iconsBarCenterOffset = 0;
-    }
-
-    int gridIconX = gridIconSize + iconsBarCenterOffset;
-    int gridIconY = gridIconSize;
-
-    for (int i = 0; i <= historySize; i++) {
-        if (gridIconX + gridIconSize > GetScreenWidth()) {
-            gridIconX = gridIconSize + iconsBarCenterOffset;
-            gridIconY += gridIconSize * 2;
-        }
-        const Color color = (i == m_SelectedFrameIndex) ? GREEN : GRAY;
-        DrawRectangle(gridIconX - 1, gridIconY - 1, gridIconSize + 2, gridIconSize + 2, BLACK);
-        DrawRectangle(gridIconX, gridIconY, gridIconSize, gridIconSize, color);
-        gridIconX += gridIconSize * 2;
-    }
-
-    const int textX = 10;
-    const int textY = GetScreenHeight() - 30;
-    DrawText(TextFormat("%d / %d", m_SelectedFrameIndex, historySize), textX, textY, 20, WHITE);
-}
-
-void TestScenePreview::ShowHelp() const {
-    if (not m_ShowHelp) return;
-
-    Rectangle helpLineRect = {
-        .x = 10,
-        .y = static_cast<float>(GetScreenHeight()) - 60,
-        .width = static_cast<float>(GetScreenWidth()) - 50,
-        .height = 10
-    };
-
-    GuiDrawText("Move camera: Middle Mouse Button", helpLineRect, TEXT_ALIGN_LEFT, WHITE);
-    helpLineRect.y -= 20;
-    GuiDrawText("Prev frame: Left / Scroll Up", helpLineRect, TEXT_ALIGN_LEFT, WHITE);
-    helpLineRect.y -= 20;
-    GuiDrawText("Next frame: Right / Scroll Down", helpLineRect, TEXT_ALIGN_LEFT, WHITE);
-    helpLineRect.y -= 20;
-    GuiDrawText("Last frame: End", helpLineRect, TEXT_ALIGN_LEFT, WHITE);
-    helpLineRect.y -= 20;
-    GuiDrawText("First frame: Home", helpLineRect, TEXT_ALIGN_LEFT, WHITE);
-    helpLineRect.y -= 20;
-    GuiDrawText("Quit: Escape", helpLineRect, TEXT_ALIGN_LEFT, WHITE);
-    helpLineRect.y -= 20;
-    GuiDrawText("Play: Space", helpLineRect, TEXT_ALIGN_LEFT, WHITE);
-}
-
 void TestScenePreview::PlaySimulation() {
     if (not m_IsPlaying) return;
 
@@ -287,6 +250,17 @@ void TestScenePreview::PlaySimulation() {
     if (IsAtLastFrame()) {
         m_IsPlaying = false;
     }
+}
+
+void TestScenePreview::ShowGui() {
+    ShowButtons();
+    ShowHelp();
+}
+
+void TestScenePreview::ShowButtons() {
+    ShowZoomButtons();
+    ShowReplayButtons();
+    ShowHelpButton();
 }
 
 void TestScenePreview::ShowZoomButtons() {
@@ -327,6 +301,31 @@ void TestScenePreview::ShowHelpButton() {
         .height = 30
     };
     GuiToggle(helpButtonRect, GuiIconText(ICON_HELP, nullptr), &m_ShowHelp);
+}
+
+void TestScenePreview::ShowHelp() const {
+    if (not m_ShowHelp) return;
+
+    Rectangle helpLineRect = {
+        .x = 10,
+        .y = static_cast<float>(GetScreenHeight()) - 60,
+        .width = static_cast<float>(GetScreenWidth()) - 50,
+        .height = 10
+    };
+
+    GuiDrawText("Move camera: Middle Mouse Button", helpLineRect, TEXT_ALIGN_LEFT, WHITE);
+    helpLineRect.y -= 20;
+    GuiDrawText("Prev frame: Left / Scroll Up", helpLineRect, TEXT_ALIGN_LEFT, WHITE);
+    helpLineRect.y -= 20;
+    GuiDrawText("Next frame: Right / Scroll Down", helpLineRect, TEXT_ALIGN_LEFT, WHITE);
+    helpLineRect.y -= 20;
+    GuiDrawText("Last frame: End", helpLineRect, TEXT_ALIGN_LEFT, WHITE);
+    helpLineRect.y -= 20;
+    GuiDrawText("First frame: Home", helpLineRect, TEXT_ALIGN_LEFT, WHITE);
+    helpLineRect.y -= 20;
+    GuiDrawText("Quit: Escape", helpLineRect, TEXT_ALIGN_LEFT, WHITE);
+    helpLineRect.y -= 20;
+    GuiDrawText("Play: Space", helpLineRect, TEXT_ALIGN_LEFT, WHITE);
 }
 
 bool TestScenePreview::AreAllGridsSameSize() const {
