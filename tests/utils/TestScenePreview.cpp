@@ -42,24 +42,21 @@ void TestScenePreview::Show() {
     InitWindow(screenWidth, screenHeight, "Snaps Test Scene Preview");
     SetWindowState(FLAG_WINDOW_RESIZABLE);
     SetWindowMinSize(screenWidth, screenHeight);
-    SetTargetFPS(1.0f / m_Scene.GetDeltaTime());
+    SetTargetFPS(static_cast<int>(1.0f / m_Scene.GetDeltaTime()));
 
     // Raygui
     GuiLoadStyleDark();
     GuiEnableTooltip();
 
-
     while (!WindowShouldClose()) // Detect window close button or ESC key
     {
+        HandleInput();
         BeginDrawing();
         {
-            HandleInput();
-
             ClearBackground(BLACK);
             ShowFramePreview();
-            ShowButtons();
             ShowFramePaginationBar();
-            ShowHelp();
+            ShowGui();
 
             PlaySimulation();
         }
@@ -83,7 +80,93 @@ void TestScenePreview::HandleInput() {
     if (IsKeyPressed(KEY_HOME)) SelectFirstFrame();
     if (IsKeyPressed(KEY_END)) SelectLastFrame();
 
+    // ---------- Mouse events ----------
     if (IsMouseButtonDown(MOUSE_BUTTON_MIDDLE)) m_PreviewOffset += GetMouseDelta();
+}
+
+Camera2D TestScenePreview::GetPreviewCamera() const {
+    const snaps::Grid& grid = GetSelectedGrid();
+    const int width = grid.Width();
+    const int height = grid.Height();
+
+    const Vector2 previewPos = {static_cast<float>(GetScreenWidth()) / 2, static_cast<float>(GetScreenHeight()) / 2};
+    const int gridWidth = width * snaps::BOX_SIZE;
+    const int gridHeight = height * snaps::BOX_SIZE;
+
+    const Camera2D camera = {
+        .offset = previewPos + m_PreviewOffset,
+        .target = Vector2{static_cast<float>(gridWidth) / 2, static_cast<float>(gridHeight) / 2},
+        .rotation = 0.0f,
+        .zoom = GetZoomLevel()
+    };
+
+    return camera;
+}
+
+void TestScenePreview::HandlePreviewInput() {
+    const Camera2D camera = GetPreviewCamera();
+    const snaps::Grid& grid = GetSelectedGrid();
+
+    auto [x, y] = GetScreenToWorld2D(GetMousePosition(), camera);
+    const int mouseGridX = static_cast<int>(x) / snaps::BOX_SIZE;
+    const int mouseGridY = static_cast<int>(y) / snaps::BOX_SIZE;
+    if (grid.InBounds(mouseGridX, mouseGridY)) {
+        m_HoveredGridPosition = std::make_pair(mouseGridX, mouseGridY);
+    } else {
+        m_HoveredGridPosition = std::nullopt;
+    }
+    if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
+        m_SelectedGridPosition = m_HoveredGridPosition;
+    }
+}
+
+void TestScenePreview::DrawFramePreview() {
+    Camera2D camera = GetPreviewCamera();
+    const snaps::Grid& grid = GetSelectedGrid();
+    const int width = grid.Width();
+    const int height = grid.Height();
+    const int gridWidth = width * snaps::BOX_SIZE;
+    const int gridHeight = height * snaps::BOX_SIZE;
+
+    if (camera.zoom > 4.0f) {
+        DrawPixelGrid(gridWidth, gridHeight, Color(40, 40, 40, 255));
+    }
+
+    for (const auto& block : grid.Blocks()) {
+        if (block.has_value()) {
+            auto [x, y] = ToWindowCoordinates(*block);
+            DrawRectangle(x, y, snaps::BOX_SIZE, snaps::BOX_SIZE, block->FillColor);
+        }
+    }
+
+    // Draw claimed grids
+    for (int gridX = 0; gridX < width; gridX++) {
+        for (int gridY = 0; gridY < height; gridY++) {
+            const auto& block = grid[gridX, gridY];
+            if (block.has_value() and block->IsDynamic) {
+                const int x = gridX * snaps::BOX_SIZE;
+                const int y = gridY * snaps::BOX_SIZE;
+                DrawRect(x, y, snaps::BOX_SIZE, snaps::BOX_SIZE, RED);
+            }
+        }
+    }
+
+    // Draw hovered grid
+    if (m_HoveredGridPosition.has_value()) {
+        const int x = m_HoveredGridPosition->first * snaps::BOX_SIZE;
+        const int y = m_HoveredGridPosition->second * snaps::BOX_SIZE;
+        DrawRect(x, y, snaps::BOX_SIZE, snaps::BOX_SIZE, YELLOW);
+    }
+
+    // Draw selected grid
+    if (m_SelectedGridPosition.has_value()) {
+        const int x = m_SelectedGridPosition->first * snaps::BOX_SIZE;
+        const int y = m_SelectedGridPosition->second * snaps::BOX_SIZE;
+        DrawRectangle(x, y, snaps::BOX_SIZE, snaps::BOX_SIZE, Color(255, 255, 0, 70));
+    }
+
+    // Draw grid outline (don't use DrawRectangleLines because corner is broken)
+    DrawRect(0, 0, gridWidth, gridHeight, YELLOW);
 }
 
 const snaps::Grid & TestScenePreview::GetSelectedGrid() const {
@@ -105,7 +188,7 @@ void TestScenePreview::SelectFirstFrame() {
 }
 
 void TestScenePreview::SelectLastFrame() {
-    m_SelectedFrameIndex = m_Scene.GetGridHistory().size();
+    m_SelectedFrameIndex = static_cast<int>(m_Scene.GetGridHistory().size());
 }
 
 bool TestScenePreview::IsAtLastFrame() const {
@@ -116,59 +199,22 @@ float TestScenePreview::GetZoomLevel() const {
     return m_ZoomLevelIndex == 0 ? 1.0f : std::powf( 2.0f, static_cast<float>(m_ZoomLevelIndex) + 1);
 }
 
+void TestScenePreview::ShowGui() {
+    ShowButtons();
+    ShowHelp();
+}
+
 void TestScenePreview::ShowFramePreview() {
-    const snaps::Grid& grid = GetSelectedGrid();
-    const int width = grid.Width();
-    const int height = grid.Height();
-
-    // Draw border in the middle of the screen
-    const Vector2 previewPos = {static_cast<float>(GetScreenWidth()) / 2, static_cast<float>(GetScreenHeight()) / 2};
-    const int gridWidth = width * snaps::BOX_SIZE;
-    const int gridHeight = height * snaps::BOX_SIZE;
-
-    const Camera2D camera = {
-        .offset = previewPos + m_PreviewOffset,
-        .target = Vector2{static_cast<float>(gridWidth) / 2, static_cast<float>(gridWidth) / 2},
-        .rotation = 0.0f,
-        .zoom = GetZoomLevel()
-    };
+    HandlePreviewInput();
+    const Camera2D camera = GetPreviewCamera();
     BeginMode2D(camera);
-
-
-    Vector2 gridScreenPos = GetWorldToScreen2D({0.0f, 0.0f}, camera);
-    BeginScissorMode(
-        static_cast<int>(gridScreenPos.x) - 1,
-        static_cast<int>(gridScreenPos.y) - 1,
-        gridWidth * static_cast<int>(camera.zoom) + 2,
-        gridHeight * static_cast<int>(camera.zoom) + 2);
-
-    if (camera.zoom > 4.0f) {
-        DrawPixelGrid(gridWidth, gridHeight, Color(40, 40, 40, 255));
-    }
-
-    for (const auto& block : grid.Blocks()) {
-        if (block.has_value()) {
-            auto [x, y] = ToWindowCoordinates(*block);
-            DrawRectangle(x, y, snaps::BOX_SIZE, snaps::BOX_SIZE, block->FillColor);
-        }
-    }
-
-
-    // Draw claimed grids
-    for (int gridX = 0; gridX < width; gridX++) {
-        for (int gridY = 0; gridY < height; gridY++) {
-            const auto& block = grid[gridX, gridY];
-            if (block.has_value() and block->IsDynamic) {
-                const int x = gridX * snaps::BOX_SIZE;
-                const int y = gridY * snaps::BOX_SIZE;
-                DrawRect(x, y, snaps::BOX_SIZE, snaps::BOX_SIZE, RED);
-            }
-        }
-    }
-
-    // Draw grid outline (don't use DrawRectangleLines because corner is broken)
-    DrawRect(0, 0, gridWidth, gridHeight, YELLOW);
-
+    auto [x, y] = GetWorldToScreen2D({0.0f, 0.0f}, camera) - Vector2{1, 1};
+    const int scissorX = static_cast<int>(x);
+    const int scissorY = static_cast<int>(y);
+    const int scissorWidth = GetSelectedGrid().Width() * snaps::BOX_SIZE * static_cast<int>(camera.zoom) + 2;
+    const int scissorHeight = GetSelectedGrid().Height() * snaps::BOX_SIZE * static_cast<int>(camera.zoom) + 2;
+    BeginScissorMode(scissorX, scissorY, scissorWidth, scissorHeight);
+    DrawFramePreview();
     EndScissorMode();
     EndMode2D();
 }
@@ -207,7 +253,7 @@ void TestScenePreview::ShowFramePaginationBar() {
     DrawText(TextFormat("%d / %d", m_SelectedFrameIndex, historySize), textX, textY, 20, WHITE);
 }
 
-void TestScenePreview::ShowHelp() {
+void TestScenePreview::ShowHelp() const {
     if (not m_ShowHelp) return;
 
     Rectangle helpLineRect = {
@@ -253,7 +299,7 @@ void TestScenePreview::ShowZoomButtons() {
 }
 
 void TestScenePreview::ShowReplayButtons() {
-    const float buttonsBarY = GetScreenHeight() - 35;
+    const float buttonsBarY = static_cast<float>(GetScreenHeight()) - 35;
     const float playButtonX = static_cast<float>(GetScreenWidth()) / 2 - 15;
     if (m_IsPlaying) {
         GuiToggle({playButtonX, buttonsBarY, 30, 30}, GuiIconText(ICON_PLAYER_PAUSE, nullptr), &m_IsPlaying);

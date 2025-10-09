@@ -3,12 +3,18 @@
 
 class TestScenePreview {
 public:
-    TestScenePreview(const TestScene& scene);
+    explicit TestScenePreview(const TestScene& scene);
 
     void Show();
 
 private:
     void HandleInput();
+
+    // Preview
+    Camera2D GetPreviewCamera() const;
+
+    void HandlePreviewInput();
+    void DrawFramePreview();
 
     void ShowFramePreview();
     void ShowFramePaginationBar();
@@ -24,16 +30,19 @@ private:
     float GetZoomLevel() const;
 
     // UI
+    void ShowGui();
+    void ShowButtons();
+    void ShowHelp() const;
     void ShowZoomButtons();
     void ShowReplayButtons();
     void ShowHelpButton();
-    void ShowButtons();
-    void ShowHelp();
 
     const TestScene& m_Scene;
 
     // UI state
     int m_SelectedFrameIndex = 0;
+    std::optional<std::pair<int, int>> m_SelectedGridPosition = std::nullopt;
+    std::optional<std::pair<int, int>> m_HoveredGridPosition = std::nullopt;
     int m_ZoomLevelIndex = 0;
     bool m_IsPlaying = false;
     bool m_ShowHelp = false;
