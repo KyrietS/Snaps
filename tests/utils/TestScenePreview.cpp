@@ -315,6 +315,8 @@ void TestScenePreview::ShowHelp() const {
 
     GuiDrawText("Move camera: Middle Mouse Button", helpLineRect, TEXT_ALIGN_LEFT, WHITE);
     helpLineRect.y -= 20;
+    GuiDrawText("Select tile: Right Mouse Button", helpLineRect, TEXT_ALIGN_LEFT, WHITE);
+    helpLineRect.y -= 20;
     GuiDrawText("Prev frame: Left / Scroll Up", helpLineRect, TEXT_ALIGN_LEFT, WHITE);
     helpLineRect.y -= 20;
     GuiDrawText("Next frame: Right / Scroll Down", helpLineRect, TEXT_ALIGN_LEFT, WHITE);
