@@ -303,6 +303,15 @@ void TestScenePreview::ShowHelpButton() {
     GuiToggle(helpButtonRect, GuiIconText(ICON_HELP, nullptr), &m_ShowHelp);
 }
 
+static void GuiDrawTextWithBg(const char *text, Rectangle textBounds, int alignment, Color tint) {
+    const int textSizeX = GuiGetTextWidth(text);
+    const int textSizeY = GuiGetFont().baseSize;
+    constexpr Color textBackground = {0, 0, 0, 100};
+    const Rectangle textBackgroundRec = {textBounds.x - 2, textBounds.y - 2, static_cast<float>(textSizeX) + 4, static_cast<float>(textSizeY)};
+    DrawRectangleRec(textBackgroundRec, textBackground);
+    GuiDrawText(text, textBounds, alignment, tint);
+}
+
 void TestScenePreview::ShowHelp() const {
     if (not m_ShowHelp) return;
 
@@ -312,22 +321,21 @@ void TestScenePreview::ShowHelp() const {
         .width = static_cast<float>(GetScreenWidth()) - 50,
         .height = 10
     };
-
-    GuiDrawText("Move camera: Middle Mouse Button", helpLineRect, TEXT_ALIGN_LEFT, WHITE);
+    GuiDrawTextWithBg("Move camera: Middle Mouse Button", helpLineRect, TEXT_ALIGN_LEFT, WHITE);
     helpLineRect.y -= 20;
-    GuiDrawText("Select tile: Right Mouse Button", helpLineRect, TEXT_ALIGN_LEFT, WHITE);
+    GuiDrawTextWithBg("Select tile: Right Mouse Button", helpLineRect, TEXT_ALIGN_LEFT, WHITE);
     helpLineRect.y -= 20;
-    GuiDrawText("Prev frame: Left / Scroll Up", helpLineRect, TEXT_ALIGN_LEFT, WHITE);
+    GuiDrawTextWithBg("Prev frame: Left / Scroll Up", helpLineRect, TEXT_ALIGN_LEFT, WHITE);
     helpLineRect.y -= 20;
-    GuiDrawText("Next frame: Right / Scroll Down", helpLineRect, TEXT_ALIGN_LEFT, WHITE);
+    GuiDrawTextWithBg("Next frame: Right / Scroll Down", helpLineRect, TEXT_ALIGN_LEFT, WHITE);
     helpLineRect.y -= 20;
-    GuiDrawText("Last frame: End", helpLineRect, TEXT_ALIGN_LEFT, WHITE);
+    GuiDrawTextWithBg("Last frame: End", helpLineRect, TEXT_ALIGN_LEFT, WHITE);
     helpLineRect.y -= 20;
-    GuiDrawText("First frame: Home", helpLineRect, TEXT_ALIGN_LEFT, WHITE);
+    GuiDrawTextWithBg("First frame: Home", helpLineRect, TEXT_ALIGN_LEFT, WHITE);
     helpLineRect.y -= 20;
-    GuiDrawText("Quit: Escape", helpLineRect, TEXT_ALIGN_LEFT, WHITE);
+    GuiDrawTextWithBg("Quit: Escape", helpLineRect, TEXT_ALIGN_LEFT, WHITE);
     helpLineRect.y -= 20;
-    GuiDrawText("Play: Space", helpLineRect, TEXT_ALIGN_LEFT, WHITE);
+    GuiDrawTextWithBg("Play: Space", helpLineRect, TEXT_ALIGN_LEFT, WHITE);
 }
 
 bool TestScenePreview::AreAllGridsSameSize() const {
