@@ -31,9 +31,10 @@ private:
     void ShowGui();
     void ShowButtons();
     void ShowZoomButtons();
-    void ShowInspectButton();
+    void ShowClaimsButton();
     void ShowHelpButton();
     void ShowReplayButtons();
+    void ShowTileInspection();
     void ShowHelp() const;
 
     bool AreAllGridsSameSize() const;
@@ -47,6 +48,6 @@ private:
     int m_ZoomLevelIndex = 0;
     bool m_IsPlaying = false;
     bool m_ShowHelp = false;
-    bool m_ShowInspect = false;
+    bool m_ShowDynamicClaims = true;
     Vector2 m_PreviewOffset = {0, 0};
 };

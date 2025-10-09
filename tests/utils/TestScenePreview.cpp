@@ -133,8 +133,8 @@ void TestScenePreview::HandlePreviewInput() {
     const snaps::Grid& grid = GetSelectedGrid();
 
     auto [x, y] = GetScreenToWorld2D(GetMousePosition(), camera);
-    const int mouseGridX = static_cast<int>(x) / snaps::BOX_SIZE;
-    const int mouseGridY = static_cast<int>(y) / snaps::BOX_SIZE;
+    const int mouseGridX = x >= 0 ? static_cast<int>(x) / snaps::BOX_SIZE : -1;
+    const int mouseGridY = y >= 0 ? static_cast<int>(y) / snaps::BOX_SIZE : -1;
     if (grid.InBounds(mouseGridX, mouseGridY)) {
         m_HoveredGridPosition = std::make_pair(mouseGridX, mouseGridY);
     } else {
@@ -165,13 +165,15 @@ void TestScenePreview::DrawFramePreview() {
     }
 
     // Draw claimed grids
-    for (int gridX = 0; gridX < width; gridX++) {
-        for (int gridY = 0; gridY < height; gridY++) {
-            const auto& block = grid[gridX, gridY];
-            if (block.has_value() and block->IsDynamic) {
-                const int x = gridX * snaps::BOX_SIZE;
-                const int y = gridY * snaps::BOX_SIZE;
-                DrawRect(x, y, snaps::BOX_SIZE, snaps::BOX_SIZE, RED);
+    if (m_ShowDynamicClaims) {
+        for (int gridX = 0; gridX < width; gridX++) {
+            for (int gridY = 0; gridY < height; gridY++) {
+                const auto& block = grid[gridX, gridY];
+                if (block.has_value() and block->IsDynamic) {
+                    const int x = gridX * snaps::BOX_SIZE;
+                    const int y = gridY * snaps::BOX_SIZE;
+                    DrawRect(x, y, snaps::BOX_SIZE, snaps::BOX_SIZE, RED);
+                }
             }
         }
     }
@@ -254,11 +256,12 @@ void TestScenePreview::PlaySimulation() {
 
 void TestScenePreview::ShowGui() {
     ShowButtons();
+    ShowTileInspection();
     ShowHelp();
 }
 
 void TestScenePreview::ShowButtons() {
-    ShowInspectButton();
+    ShowClaimsButton();
     ShowZoomButtons();
     ShowHelpButton();
     ShowReplayButtons();
@@ -275,14 +278,14 @@ void TestScenePreview::ShowZoomButtons() {
     GuiToggleGroup(zoomButtonRect, "x1\nx4\nx8\nx16", &m_ZoomLevelIndex);
 }
 
-void TestScenePreview::ShowInspectButton() {
+void TestScenePreview::ShowClaimsButton() {
     const Rectangle helpButtonRect = {
         .x = static_cast<float>(GetScreenWidth()) - 35,
         .y = static_cast<float>(GetScreenHeight()) - 35 - 34,
         .width = 30,
         .height = 30
     };
-    GuiToggle(helpButtonRect, GuiIconText(ICON_LENS_BIG, nullptr), &m_ShowInspect);
+    GuiToggle(helpButtonRect, GuiIconText(ICON_LAYERS_VISIBLE, nullptr), &m_ShowDynamicClaims);
 }
 
 void TestScenePreview::ShowHelpButton() {
@@ -311,6 +314,71 @@ void TestScenePreview::ShowReplayButtons() {
     }
     if (GuiButton({playButtonX + 35, buttonsBarY, 30, 30}, GuiIconText(ICON_PLAYER_NEXT, nullptr))) {
         SelectNextFrame();
+    }
+}
+
+static std::vector<std::pair<std::string, std::string>> GetInspectData(const std::optional<snaps::Block>& block) {
+    if (not block.has_value()) return {std::make_pair("Empty", "")};
+
+    auto formatFloat = [](const float value) {
+        return std::format("{:.1f}", value);
+    };
+    auto formatBool = [](const bool value) {
+        return value ? "true" : "false";
+    };
+    auto formatVector = [](const Vector2& vec) {
+        return std::format("({:.1f}, {:.1f})", vec.x, vec.y);
+    };
+
+    std::vector<std::pair<std::string, std::string>> result;
+    result.emplace_back("WorldPosition", formatVector(block->WorldPosition));
+    result.emplace_back("Velocity", formatVector(block->Velocity));
+    result.emplace_back("IsDynamic", formatBool(block->IsDynamic));
+    result.emplace_back("InvMass", formatFloat(block->InvMass));
+    result.emplace_back("Friction", formatFloat(block->Friction));
+    result.emplace_back("Acceleration", formatVector(block->Acceleration));
+    return result;
+}
+
+void TestScenePreview::ShowTileInspection() {
+    if (not m_SelectedGridPosition) return;
+
+    const std::optional<snaps::Block>& block = GetSelectedGrid()[m_SelectedGridPosition->first, m_SelectedGridPosition->second];
+
+    const std::vector<std::pair<std::string, std::string>> inspectData = GetInspectData(block);
+
+    Rectangle inspectPanelRect = {
+        .x = 10,
+        .y = 10,
+        .width = 220,
+        .height = static_cast<float>(inspectData.size() * 15 + 35)
+    };
+
+    if (GuiWindowBox(inspectPanelRect, "Title inspection")) {
+        m_SelectedGridPosition = std::nullopt;
+    }
+    Rectangle labelRect = {
+        inspectPanelRect.x + 5, inspectPanelRect.y + 30, inspectPanelRect.width * 0.5f - 5, 10};
+    Rectangle valueRect = {
+        inspectPanelRect.x + 5 + labelRect.width, inspectPanelRect.y + 30, inspectPanelRect.width * 0.5f - 5, 10};
+
+    auto drawInspectText = [&](const char* label, const char* value) {
+        GuiDrawText(label, labelRect, TEXT_ALIGN_LEFT, LIGHTGRAY);
+        GuiDrawText(value, valueRect, TEXT_ALIGN_RIGHT, WHITE);
+        labelRect.y += 15;
+        valueRect.y += 15;
+    };
+
+    for (const auto& [label, value] : inspectData) {
+        drawInspectText(label.c_str(), value.c_str());
+    }
+
+    Color selectedTileColor {0, 0, 255, 255};
+    if (block.has_value()) {
+        Camera2D camera = GetPreviewCamera();
+        BeginMode2D(camera);
+        DrawRect(block->WorldPosition.x, block->WorldPosition.y, snaps::BOX_SIZE, snaps::BOX_SIZE, selectedTileColor);
+        EndMode2D();
     }
 }
 
