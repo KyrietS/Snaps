@@ -258,20 +258,41 @@ void TestScenePreview::ShowGui() {
 }
 
 void TestScenePreview::ShowButtons() {
+    ShowInspectButton();
     ShowZoomButtons();
-    ShowReplayButtons();
     ShowHelpButton();
+    ShowReplayButtons();
 }
 
 void TestScenePreview::ShowZoomButtons() {
     constexpr int zoomButtonsGroupHeight = 4 * (30 + 2);
     const Rectangle zoomButtonRect = {
         .x = static_cast<float>(GetScreenWidth()) - 35,
-        .y = static_cast<float>(GetScreenHeight()) - zoomButtonsGroupHeight - 5 - 35,
+        .y = static_cast<float>(GetScreenHeight()) - zoomButtonsGroupHeight - 5 - 35 - 32,
         .width = 30,
         .height = 30
     };
     GuiToggleGroup(zoomButtonRect, "x1\nx4\nx8\nx16", &m_ZoomLevelIndex);
+}
+
+void TestScenePreview::ShowInspectButton() {
+    const Rectangle helpButtonRect = {
+        .x = static_cast<float>(GetScreenWidth()) - 35,
+        .y = static_cast<float>(GetScreenHeight()) - 35 - 34,
+        .width = 30,
+        .height = 30
+    };
+    GuiToggle(helpButtonRect, GuiIconText(ICON_LENS_BIG, nullptr), &m_ShowInspect);
+}
+
+void TestScenePreview::ShowHelpButton() {
+    const Rectangle helpButtonRect = {
+        .x = static_cast<float>(GetScreenWidth()) - 35,
+        .y = static_cast<float>(GetScreenHeight()) - 35,
+        .width = 30,
+        .height = 30
+    };
+    GuiToggle(helpButtonRect, GuiIconText(ICON_HELP, nullptr), &m_ShowHelp);
 }
 
 void TestScenePreview::ShowReplayButtons() {
@@ -291,16 +312,6 @@ void TestScenePreview::ShowReplayButtons() {
     if (GuiButton({playButtonX + 35, buttonsBarY, 30, 30}, GuiIconText(ICON_PLAYER_NEXT, nullptr))) {
         SelectNextFrame();
     }
-}
-
-void TestScenePreview::ShowHelpButton() {
-    const Rectangle helpButtonRect = {
-        .x = static_cast<float>(GetScreenWidth()) - 35,
-        .y = static_cast<float>(GetScreenHeight()) - 35,
-        .width = 30,
-        .height = 30
-    };
-    GuiToggle(helpButtonRect, GuiIconText(ICON_HELP, nullptr), &m_ShowHelp);
 }
 
 static void GuiDrawTextWithBg(const char *text, Rectangle textBounds, int alignment, Color tint) {
