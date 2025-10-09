@@ -1,6 +1,7 @@
 #include "TestScenePreview.hpp"
 
 #include <algorithm>
+#include <cassert>
 #include <raylib.h>
 
 #define RAYGUI_IMPLEMENTATION
@@ -32,8 +33,9 @@ void DrawPixelGrid(const int gridWidth, const int gridHeight, const Color color)
 
 TestScenePreview::TestScenePreview(const TestScene &scene)
     : m_Scene(scene)
-    , m_SelectedFrameIndex(static_cast<int>(m_Scene.GetGridHistory().size()))
-{}
+    , m_SelectedFrameIndex(static_cast<int>(m_Scene.GetGridHistory().size())) {
+    assert(AreAllGridsSameSize() && "Scenes with different grid sizes are not supported");
+}
 
 void TestScenePreview::Show() {
     constexpr int screenWidth = 500;
@@ -325,4 +327,12 @@ void TestScenePreview::ShowHelpButton() {
         .height = 30
     };
     GuiToggle(helpButtonRect, GuiIconText(ICON_HELP, nullptr), &m_ShowHelp);
+}
+
+bool TestScenePreview::AreAllGridsSameSize() const {
+    const int width = m_Scene.GetCurrentGrid().Width();
+    const int height = m_Scene.GetCurrentGrid().Height();
+    return std::ranges::all_of(m_Scene.GetGridHistory(), [&](const auto& grid) {
+        return grid.Width() == width and grid.Height() == height;
+    });
 }

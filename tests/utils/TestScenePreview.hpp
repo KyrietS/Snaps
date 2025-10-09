@@ -37,6 +37,8 @@ private:
     void ShowReplayButtons();
     void ShowHelpButton();
 
+    bool AreAllGridsSameSize() const;
+
     const TestScene& m_Scene;
 
     // UI state
