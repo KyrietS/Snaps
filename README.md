@@ -1,6 +1,6 @@
-# Snaps
+# Snaps Physics
 
-Snaps is a physics engine where every object eventually "snaps" to a grid.
+Snaps is a physics engine where every object ultimately "snaps" to a grid.
 
 ## 🚧 Work in progress 🚧
 
