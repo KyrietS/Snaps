@@ -2,9 +2,11 @@
 #include "DebugBreak.hpp"
 #include "TestScenePreview.hpp"
 #include <gtest/gtest.h>
+#include <algorithm>
 #include <ranges>
 
 bool TestScene::s_ShowPreviewOnFailure = true;
+bool TestScene::s_ShowPreviewAlways = true;
 
 TestScene::TestScene(snaps::SnapsEngine& engine, snaps::Grid& grid)
     : m_Engine(engine)
@@ -12,7 +14,7 @@ TestScene::TestScene(snaps::SnapsEngine& engine, snaps::Grid& grid)
 
 TestScene::~TestScene() {
     try {
-        if (s_ShowPreviewOnFailure) {
+        if (s_ShowPreviewAlways or (HasAnyFailedChecks() and s_ShowPreviewOnFailure)) {
             TestScenePreview preview(*this);
             preview.Show();
         }
@@ -56,6 +58,16 @@ void TestScene::AddCheck(const GridChecker& checker, const char* file, const int
         else
             ADD_FAILURE_AT(file, line) << "---- [FRAME " << frameNumber << "] Check failed: " << result.Summary;
     }
+}
+
+bool TestScene::HasAnyFailedChecks() const {
+    for (const auto &results: m_CheckResults | std::views::values) {
+        if (std::ranges::any_of(results, [](const auto& result) { return not result.Success; })) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 void TestScene::SetDeltaTime(const float dt) {

@@ -1,5 +1,5 @@
 #pragma once
-#include "GridChecker.hpp"
+#include "GridCheckers.hpp"
 #include "snaps/Grid.hpp"
 #include "snaps/SnapsEngine.hpp"
 #include <map>
@@ -10,6 +10,7 @@
 class TestScene {
 public:
     static bool s_ShowPreviewOnFailure;
+    static bool s_ShowPreviewAlways;
 
     TestScene(snaps::SnapsEngine& engine, snaps::Grid& grid);
     ~TestScene();
@@ -56,6 +57,8 @@ public:
 
     void AddCheck(const GridChecker& checker, const char* file, int line, bool fatal = false);
 private:
+    bool HasAnyFailedChecks() const;
+
     snaps::SnapsEngine& m_Engine;
     snaps::Grid& m_Grid;
 

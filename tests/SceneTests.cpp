@@ -18,7 +18,7 @@ void AddSand(snaps::Grid& grid, int x, int y) {
     grid[ x, y ] = SandBlock(x * snaps::BOX_SIZE, y * snaps::BOX_SIZE);
 }
 
-TEST(SceneTest, BasicTest) {
+TEST(SceneTests, BasicFreeFall) {
     snaps::Grid grid = MakeTestGrid(5, 5);
     AddSand(grid, 2, 2);
 
@@ -27,12 +27,15 @@ TEST(SceneTest, BasicTest) {
     TestScene scene(engine, grid);
 
     EXPECT_SCENE(scene, DynamicBlockAt(2, 2));
-    EXPECT_SCENE(scene, DynamicBlockAt(2, 2));
+    EXPECT_SCENE(scene, EmptyBlockAt(2, 3));
+    EXPECT_SCENE(scene, StaticBlockAt(2, 4));
 
-    EXPECT_SCENE(scene, DynamicBlockAt(0, 0));
-    EXPECT_SCENE(scene, DynamicBlockAt(0, 0));
-    EXPECT_SCENE(scene, DynamicBlockAt(1, 0));
+    scene.Tick();
+    EXPECT_SCENE(scene, EmptyBlockAt(2, 2));
+    EXPECT_SCENE(scene, DynamicBlockAt(2, 3));
 
     scene.TickTime(0.5);
+    EXPECT_SCENE(scene, EmptyBlockAt(2, 2));
     EXPECT_SCENE(scene, DynamicBlockAt(2, 3));
+    EXPECT_SCENE(scene, BlockAlignedAt(2, 3));
 }
