@@ -33,6 +33,6 @@ TEST(SceneTest, BasicTest) {
     EXPECT_SCENE(scene, DynamicBlockAt(0, 0));
     EXPECT_SCENE(scene, DynamicBlockAt(1, 0));
 
-    scene.Tick(20);
+    scene.TickTime(0.5);
     EXPECT_SCENE(scene, DynamicBlockAt(2, 3));
 }

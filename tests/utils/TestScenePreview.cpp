@@ -378,7 +378,7 @@ void TestScenePreview::ShowReplayButtons() {
         .width = 100,
         .height = 10
     };
-    GuiDrawTextWithBg(TextFormat("%.4f s", timeSinceStartInMs), textRect, TEXT_ALIGN_CENTER, WHITE);
+    GuiDrawTextWithBg(TextFormat("%.3f s", timeSinceStartInMs), textRect, TEXT_ALIGN_CENTER, WHITE);
 }
 
 static std::vector<std::pair<std::string, std::string>> GetInspectData(const std::optional<snaps::Block>& block) {

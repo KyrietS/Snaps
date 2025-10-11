@@ -22,10 +22,16 @@ TestScene::~TestScene() {
 }
 
 void TestScene::Tick() {
-    Tick(1);
+    TickN(1);
 }
 
-void TestScene::Tick(int numberOfTicks) {
+void TestScene::TickTime(const float seconds) {
+    const int ticks = static_cast<int>(std::ceil(seconds / m_DeltaTime));
+    assert(ticks < 1000000 && "Too many ticks requested");
+    TickN(ticks);
+}
+
+void TestScene::TickN(const int numberOfTicks) {
     for (int tick = 0; tick < numberOfTicks; tick++) {
         m_GridHistory.push_back(m_Grid);
         m_CheckResults[m_GridHistory.size()] = {};
