@@ -34,9 +34,11 @@ cmake --build Snaps-build
 
 Tests are written using Google Test. The library is fetched automatically by CMake during the configuration step of the tests.
 
-**Scene tests**
+### Scene tests
 
-There are special type of tests called Scene tests. They simulate a physical world for a number of steps and make assertions on the way. Such tests have a graphical preview with debugging interface
+There are special type of tests called Scene Tests. They simulate a physical world for a number of steps and make assertions on the way. Such tests have a graphical preview with debugging interface.
+
+<img width="502" height="502" alt="image" src="https://github.com/user-attachments/assets/6e59aee7-92f5-46ec-b7d4-66f477ae7512" />
 
 ## License
 
