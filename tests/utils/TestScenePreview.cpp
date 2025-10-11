@@ -33,7 +33,14 @@ void GuiDrawTextWithBg(const char *text, Rectangle textBounds, int alignment, Co
     const int textSizeX = GuiGetTextWidth(text);
     const int textSizeY = GuiGetFont().baseSize;
     constexpr Color textBackground = {0, 0, 0, 100};
-    const Rectangle textBackgroundRec = {textBounds.x - 2, textBounds.y - 2, static_cast<float>(textSizeX) + 4, static_cast<float>(textSizeY)};
+
+    float textBgX = textBounds.x;
+    if (alignment == TEXT_ALIGN_CENTER)
+        textBgX = textBounds.x + (textBounds.width - static_cast<float>(textSizeX)) / 2;
+    else if (alignment == TEXT_ALIGN_RIGHT)
+        textBgX = textBounds.x + textBounds.width - static_cast<float>(textSizeX);
+
+    const Rectangle textBackgroundRec = {textBgX - 2, textBounds.y - 2, static_cast<float>(textSizeX) + 4, static_cast<float>(textSizeY)};
     DrawRectangleRec(textBackgroundRec, textBackground);
     GuiDrawText(text, textBounds, alignment, tint);
 }
@@ -363,6 +370,15 @@ void TestScenePreview::ShowReplayButtons() {
     if (GuiButton({playButtonX + 35, buttonsBarY, 30, 30}, GuiIconText(ICON_PLAYER_NEXT, nullptr))) {
         SelectNextFrame();
     }
+
+    const float timeSinceStartInMs = m_Scene.GetDeltaTime() * static_cast<float>(m_SelectedFrameIndex);
+    const Rectangle textRect = {
+        .x = (static_cast<float>(GetScreenWidth()) - 100) / 2,
+        .y = buttonsBarY - 18,
+        .width = 100,
+        .height = 10
+    };
+    GuiDrawTextWithBg(TextFormat("%.4f s", timeSinceStartInMs), textRect, TEXT_ALIGN_CENTER, WHITE);
 }
 
 static std::vector<std::pair<std::string, std::string>> GetInspectData(const std::optional<snaps::Block>& block) {
