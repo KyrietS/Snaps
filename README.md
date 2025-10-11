@@ -1,6 +1,6 @@
 # Snaps Physics
 
-Snaps is a 2D physics engine in which every object ultimately "snaps" to a grid.\
+Snaps is a 2D physics engine where every object ultimately "snaps" to a grid.\
 Its purpose is to enable 2D tile-based games to have smooth and reasonably realistic physics.
 
 ### Playing with sand
@@ -44,7 +44,7 @@ The preview opens up automatically when a scene test fails. This behavior can be
 
 ## License
 
-Copyright © 2023-2025 Sebastian Fojcik \
+Copyright © 2025 Sebastian Fojcik \
 Use of this software is granted under the terms of the MIT License.
 
 See the [LICENCE](LICENSE) for the full license text.
