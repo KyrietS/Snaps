@@ -9,6 +9,7 @@ namespace snaps
 class Grid;
 }
 
+namespace check {
 struct CheckResult {
     bool Success = true;
     std::string Summary;
@@ -37,9 +38,9 @@ public:
     virtual CheckResult Check(const snaps::Grid& grid) const = 0;
 };
 
-struct EmptyBlockAt : GridChecker
+struct BlockIsEmptyAt : GridChecker
 {
-    EmptyBlockAt(const int gridX, const int gridY) : m_GridX(gridX), m_GridY(gridY) {}
+    BlockIsEmptyAt(const int gridX, const int gridY) : m_GridX(gridX), m_GridY(gridY) {}
     CheckResult Check(const snaps::Grid& grid) const override
     {
         const auto& block = grid[m_GridX, m_GridY];
@@ -75,9 +76,9 @@ protected:
     const int m_GridY;
 };
 
-struct DynamicBlockAt : SingleGridChecker
+struct BlockIsDynamicAt : SingleGridChecker
 {
-    DynamicBlockAt(const int gridX, const int gridY) : SingleGridChecker(gridX, gridY) {}
+    BlockIsDynamicAt(const int gridX, const int gridY) : SingleGridChecker(gridX, gridY) {}
     bool Check(const snaps::Block& block) const override
     {
         return block.IsDynamic;
@@ -85,9 +86,9 @@ struct DynamicBlockAt : SingleGridChecker
     std::string Expectation() const override { return "dynamic block"; }
 };
 
-struct StaticBlockAt : SingleGridChecker
+struct BlockIsStaticAt : SingleGridChecker
 {
-    StaticBlockAt(const int gridX, const int gridY) : SingleGridChecker(gridX, gridY) {}
+    BlockIsStaticAt(const int gridX, const int gridY) : SingleGridChecker(gridX, gridY) {}
     bool Check(const snaps::Block& block) const override
     {
         return not block.IsDynamic;
@@ -95,9 +96,9 @@ struct StaticBlockAt : SingleGridChecker
     std::string Expectation() const override { return "static block"; }
 };
 
-struct BlockAlignedAt : SingleGridChecker
+struct BlockIsAlignedAt : SingleGridChecker
 {
-    BlockAlignedAt(const int gridX, const int gridY)
+    BlockIsAlignedAt(const int gridX, const int gridY)
         : SingleGridChecker(gridX, gridY), m_ExpectedX(gridX * snaps::BOX_SIZE), m_ExpectedY(gridY * snaps::BOX_SIZE) {}
     bool Check(const snaps::Block& block) const override
     {
@@ -111,3 +112,5 @@ struct BlockAlignedAt : SingleGridChecker
     const int m_ExpectedX;
     const int m_ExpectedY;
 };
+
+}

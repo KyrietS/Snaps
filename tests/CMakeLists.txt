@@ -11,7 +11,9 @@ FetchContent_MakeAvailable(googletest)
 
 add_executable(SnapsTests
         Main.cpp
-        SceneTests.cpp
+        BasicTests.cpp
+        fixtures/SceneTest.cpp
+        fixtures/SceneTest.hpp
         utils/TestGrid.cpp
         utils/TestGrid.hpp
         utils/TestScene.cpp
@@ -21,4 +23,5 @@ add_executable(SnapsTests
 )
 target_link_libraries(SnapsTests PRIVATE Snaps raylib gtest gmock)
 target_include_directories(SnapsTests SYSTEM PRIVATE external)
+target_include_directories(SnapsTests PRIVATE .)
 

@@ -12,17 +12,6 @@ TestScene::TestScene(snaps::SnapsEngine& engine, snaps::Grid& grid)
     : m_Engine(engine)
     , m_Grid(grid) {}
 
-TestScene::~TestScene() {
-    try {
-        if (s_ShowPreviewAlways or (HasAnyFailedChecks() and s_ShowPreviewOnFailure)) {
-            TestScenePreview preview(*this);
-            preview.Show();
-        }
-    } catch (...) {
-        std::cerr << "Exception thrown while showing TestScenePreview" << std::endl;
-    }
-}
-
 void TestScene::Tick() {
     TickN(1);
 }
@@ -48,7 +37,7 @@ void TestScene::BreakAtTick(int tickNumber) {
     m_BreakAtTick = tickNumber;
 }
 
-void TestScene::AddCheck(const GridChecker& checker, const char* file, const int line, const bool fatal) {
+void TestScene::AddCheck(const check::GridChecker& checker, const char* file, const int line, const bool fatal) {
     const auto result = checker.Check(GetCurrentGrid());
     m_CheckResults[m_GridHistory.size()].push_back(result);
     if (not result.Success) {
@@ -86,6 +75,6 @@ const std::deque<snaps::Grid>& TestScene::GetGridHistory() const {
     return m_GridHistory;
 }
 
-const std::map<std::size_t, std::vector<CheckResult>>& TestScene::GetCheckResults() const {
+const std::map<std::size_t, std::vector<check::CheckResult>>& TestScene::GetCheckResults() const {
     return m_CheckResults;
 }

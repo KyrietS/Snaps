@@ -4,8 +4,8 @@
 #include "snaps/SnapsEngine.hpp"
 #include <map>
 
-#define EXPECT_SCENE(scene, checker) (scene).AddCheck((checker), __FILE__, __LINE__, false)
-#define ASSERT_SCENE(scene, checker) do { (scene).AddCheck((checker), __FILE__, __LINE__, true); if (testing::Test::HasFatalFailure()) return; } while(0)
+#define EXPECT_SCENE(scene, checker) (scene)->AddCheck((checker), __FILE__, __LINE__, false)
+#define ASSERT_SCENE(scene, checker) do { (scene)->AddCheck((checker), __FILE__, __LINE__, true); if (testing::Test::HasFatalFailure()) return; } while(0)
 
 class TestScene {
 public:
@@ -13,7 +13,6 @@ public:
     static bool s_ShowPreviewAlways;
 
     TestScene(snaps::SnapsEngine& engine, snaps::Grid& grid);
-    ~TestScene();
 
     /**
      * Advance the simulation by one tick (using the current delta time)
@@ -53,11 +52,11 @@ public:
 
     const snaps::Grid& GetCurrentGrid() const;
     const std::deque<snaps::Grid>& GetGridHistory() const;
-    const std::map<std::size_t, std::vector<CheckResult>>& GetCheckResults() const;
+    const std::map<std::size_t, std::vector<check::CheckResult>>& GetCheckResults() const;
 
-    void AddCheck(const GridChecker& checker, const char* file, int line, bool fatal = false);
-private:
+    void AddCheck(const check::GridChecker& checker, const char* file, int line, bool fatal = false);
     bool HasAnyFailedChecks() const;
+private:
 
     snaps::SnapsEngine& m_Engine;
     snaps::Grid& m_Grid;
@@ -65,6 +64,6 @@ private:
     float m_DeltaTime = 1.0f / 60.0f;
     std::optional<int> m_BreakAtTick;
     std::deque<snaps::Grid> m_GridHistory;
-    std::map<std::size_t, std::vector<CheckResult>> m_CheckResults = {{0, {}}}; // frame number -> results (can be empty)
+    std::map<std::size_t, std::vector<check::CheckResult>> m_CheckResults = {{0, {}}}; // frame number -> results (can be empty)
 };
 
