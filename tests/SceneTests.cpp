@@ -2,6 +2,7 @@
 #include "snaps/Grid.hpp"
 #include "utils/TestScene.hpp"
 #include "utils/TestScenePreview.hpp"
+#include <gtest/gtest.h>
 
 constexpr Color SAND_COLOR = { 194, 178, 128, 255 };
 
@@ -17,16 +18,21 @@ void AddSand(snaps::Grid& grid, int x, int y) {
     grid[ x, y ] = SandBlock(x * snaps::BOX_SIZE, y * snaps::BOX_SIZE);
 }
 
-void BasicTest() {
-    // Prepare test grid 5 x 5
+TEST(SceneTest, BasicTest) {
     snaps::Grid grid = MakeTestGrid(5, 5);
     AddSand(grid, 2, 2);
 
     snaps::SnapsEngine engine(grid);
 
     TestScene scene(engine, grid);
-    scene.Tick(20);
 
-    TestScenePreview preview(scene);
-    preview.Show();
+    EXPECT_SCENE(scene, DynamicBlockAt(2, 2));
+    EXPECT_SCENE(scene, DynamicBlockAt(2, 2));
+
+    EXPECT_SCENE(scene, DynamicBlockAt(0, 0));
+    EXPECT_SCENE(scene, DynamicBlockAt(0, 0));
+    EXPECT_SCENE(scene, DynamicBlockAt(1, 0));
+
+    scene.Tick(20);
+    EXPECT_SCENE(scene, DynamicBlockAt(2, 3));
 }

@@ -31,13 +31,17 @@ private:
     void ShowGui();
     void ShowButtons();
     void ShowZoomButtons();
-    void ShowClaimsButton();
+    void ShowDiagnosticsButton();
     void ShowHelpButton();
     void ShowReplayButtons();
     void ShowTileInspection();
     void ShowHelp() const;
 
+    // Utils
     bool AreAllGridsSameSize() const;
+    bool HasAnyOkChecks(int frameIndex) const;
+    bool HasAnyFailedChecks(int frameIndex) const;
+
 
     const TestScene& m_Scene;
 
@@ -48,6 +52,6 @@ private:
     int m_ZoomLevelIndex = 0;
     bool m_IsPlaying = false;
     bool m_ShowHelp = false;
-    bool m_ShowDynamicClaims = true;
+    bool m_ShowDiagnostics = true;
     Vector2 m_PreviewOffset = {0, 0};
 };

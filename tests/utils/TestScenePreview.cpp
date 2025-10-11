@@ -28,6 +28,15 @@ void DrawPixelGrid(const int gridWidth, const int gridHeight, const Color color)
         }
     }
 }
+
+void GuiDrawTextWithBg(const char *text, Rectangle textBounds, int alignment, Color tint) {
+    const int textSizeX = GuiGetTextWidth(text);
+    const int textSizeY = GuiGetFont().baseSize;
+    constexpr Color textBackground = {0, 0, 0, 100};
+    const Rectangle textBackgroundRec = {textBounds.x - 2, textBounds.y - 2, static_cast<float>(textSizeX) + 4, static_cast<float>(textSizeY)};
+    DrawRectangleRec(textBackgroundRec, textBackground);
+    GuiDrawText(text, textBounds, alignment, tint);
+}
 }
 
 TestScenePreview::TestScenePreview(const TestScene &scene)
@@ -40,6 +49,7 @@ void TestScenePreview::Show() {
     constexpr int screenWidth = 500;
     constexpr int screenHeight = 500;
 
+    SetTraceLogLevel(LOG_ERROR);
     InitWindow(screenWidth, screenHeight, "Snaps Test Scene Preview");
     SetWindowState(FLAG_WINDOW_RESIZABLE);
     SetWindowMinSize(screenWidth, screenHeight);
@@ -117,7 +127,15 @@ void TestScenePreview::ShowFramePaginationBar() {
             gridIconX = gridIconSize + iconsBarCenterOffset;
             gridIconY += gridIconSize * 2;
         }
-        const Color color = (i == m_SelectedFrameIndex) ? GREEN : GRAY;
+        auto color = GRAY;
+        if (i == m_SelectedFrameIndex) {
+            color = YELLOW;
+        }else if (HasAnyFailedChecks(i)) {
+            color = RED;
+        } else if (HasAnyOkChecks(i)) {
+            color = GREEN;
+        }
+
         DrawRectangle(gridIconX - 1, gridIconY - 1, gridIconSize + 2, gridIconSize + 2, BLACK);
         DrawRectangle(gridIconX, gridIconY, gridIconSize, gridIconSize, color);
         gridIconX += gridIconSize * 2;
@@ -164,8 +182,37 @@ void TestScenePreview::DrawFramePreview() {
         }
     }
 
-    // Draw claimed grids
-    if (m_ShowDynamicClaims) {
+    if (m_ShowDiagnostics) {
+        // Draw failed checks
+        std::set<std::pair<int, int>> markedPositions;
+        for (const auto& result : m_Scene.GetCheckResults().at(m_SelectedFrameIndex)) {
+            if (not result.Success) {
+                for (const auto& [gridX, gridY] : result.Positions) {
+                    if (grid.InBounds(gridX, gridY) and not markedPositions.contains({gridX, gridY})) {
+                        markedPositions.emplace(gridX, gridY);
+                        const int x = gridX * snaps::BOX_SIZE;
+                        const int y = gridY * snaps::BOX_SIZE;
+                        DrawRectangle(x, y, snaps::BOX_SIZE, snaps::BOX_SIZE, Color(255, 0, 0, 50));
+                    }
+                }
+            }
+        }
+
+        // Draw ok checks
+        for (const auto& result : m_Scene.GetCheckResults().at(m_SelectedFrameIndex)) {
+            if (result.Success) {
+                for (const auto& [gridX, gridY] : result.Positions) {
+                    if (grid.InBounds(gridX, gridY) and not markedPositions.contains({gridX, gridY})) {
+                        markedPositions.emplace(gridX, gridY);
+                        const int x = gridX * snaps::BOX_SIZE;
+                        const int y = gridY * snaps::BOX_SIZE;
+                        DrawRectangle(x, y, snaps::BOX_SIZE, snaps::BOX_SIZE, Color(0, 255, 0, 50));
+                    }
+                }
+            }
+        }
+
+        // Draw dynamic claims
         for (int gridX = 0; gridX < width; gridX++) {
             for (int gridY = 0; gridY < height; gridY++) {
                 const auto& block = grid[gridX, gridY];
@@ -261,7 +308,7 @@ void TestScenePreview::ShowGui() {
 }
 
 void TestScenePreview::ShowButtons() {
-    ShowClaimsButton();
+    ShowDiagnosticsButton();
     ShowZoomButtons();
     ShowHelpButton();
     ShowReplayButtons();
@@ -278,14 +325,14 @@ void TestScenePreview::ShowZoomButtons() {
     GuiToggleGroup(zoomButtonRect, "x1\nx4\nx8\nx16", &m_ZoomLevelIndex);
 }
 
-void TestScenePreview::ShowClaimsButton() {
+void TestScenePreview::ShowDiagnosticsButton() {
     const Rectangle helpButtonRect = {
         .x = static_cast<float>(GetScreenWidth()) - 35,
         .y = static_cast<float>(GetScreenHeight()) - 35 - 34,
         .width = 30,
         .height = 30
     };
-    GuiToggle(helpButtonRect, GuiIconText(ICON_LAYERS_VISIBLE, nullptr), &m_ShowDynamicClaims);
+    GuiToggle(helpButtonRect, GuiIconText(ICON_LAYERS_VISIBLE, nullptr), &m_ShowDiagnostics);
 }
 
 void TestScenePreview::ShowHelpButton() {
@@ -375,20 +422,29 @@ void TestScenePreview::ShowTileInspection() {
 
     Color selectedTileColor {0, 0, 255, 255};
     if (block.has_value()) {
-        Camera2D camera = GetPreviewCamera();
+        const Camera2D camera = GetPreviewCamera();
         BeginMode2D(camera);
-        DrawRect(block->WorldPosition.x, block->WorldPosition.y, snaps::BOX_SIZE, snaps::BOX_SIZE, selectedTileColor);
+        DrawRect(static_cast<int>(block->WorldPosition.x), static_cast<int>(block->WorldPosition.y), snaps::BOX_SIZE, snaps::BOX_SIZE, selectedTileColor);
         EndMode2D();
     }
-}
 
-static void GuiDrawTextWithBg(const char *text, Rectangle textBounds, int alignment, Color tint) {
-    const int textSizeX = GuiGetTextWidth(text);
-    const int textSizeY = GuiGetFont().baseSize;
-    constexpr Color textBackground = {0, 0, 0, 100};
-    const Rectangle textBackgroundRec = {textBounds.x - 2, textBounds.y - 2, static_cast<float>(textSizeX) + 4, static_cast<float>(textSizeY)};
-    DrawRectangleRec(textBackgroundRec, textBackground);
-    GuiDrawText(text, textBounds, alignment, tint);
+    auto checkResults = m_Scene.GetCheckResults().at(m_SelectedFrameIndex);
+
+    for (const auto& result : checkResults) {
+        if (m_SelectedGridPosition and result.Positions.contains({m_SelectedGridPosition->first, m_SelectedGridPosition->second})) {
+            const Rectangle resultRec = {
+                .x = 10,
+                .y = labelRect.y + 15,
+                .width = static_cast<float>(GetScreenWidth()) - 20,
+                .height = 10
+            };
+            const Color resultColor = result.Success ? Color(54, 247, 90, 255) : Color(255, 122, 122, 255);
+            const GuiIconName resultIcon = result.Success ? ICON_OK_TICK : ICON_CROSS;
+            const char* text = GuiIconText(resultIcon, result.Summary.c_str());
+            GuiDrawTextWithBg(text, resultRec, TEXT_ALIGN_LEFT, resultColor);
+            labelRect.y += 16;
+        }
+    }
 }
 
 void TestScenePreview::ShowHelp() const {
@@ -422,5 +478,17 @@ bool TestScenePreview::AreAllGridsSameSize() const {
     const int height = m_Scene.GetCurrentGrid().Height();
     return std::ranges::all_of(m_Scene.GetGridHistory(), [&](const auto& grid) {
         return grid.Width() == width and grid.Height() == height;
+    });
+}
+
+bool TestScenePreview::HasAnyOkChecks(const int frameIndex) const {
+    return std::ranges::any_of(m_Scene.GetCheckResults().at(frameIndex), [](const auto& result) {
+        return result.Success;
+    });
+}
+
+bool TestScenePreview::HasAnyFailedChecks(const int frameIndex) const {
+    return std::ranges::any_of(m_Scene.GetCheckResults().at(frameIndex), [](const auto& result) {
+        return not result.Success;
     });
 }
