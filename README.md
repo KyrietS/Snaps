@@ -20,4 +20,27 @@ Its purpose is to enable 2D tile-based games to have smooth and reasonably reali
 - Gas simulation
 - Constraints
 
+## Building
 
+This project uses CMake to generate project files.
+
+```bash
+git clone https://github.com/KyrietS/Snaps.git
+cmake -S Snaps -B Snaps-build
+cmake --build Snaps-build
+```
+
+## Tests
+
+Tests are written using Google Test. The library is fetched automatically by CMake during the configuration step of the tests.
+
+**Scene tests**
+
+There are special type of tests called Scene tests. They simulate a physical world for a number of steps and make assertions on the way. Such tests have a graphical preview with debugging interface
+
+## License
+
+Copyright © 2023-2025 Sebastian Fojcik \
+Use of this software is granted under the terms of the MIT License.
+
+See the [LICENCE](LICENSE) for the full license text.
