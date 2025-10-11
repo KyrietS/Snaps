@@ -36,6 +36,7 @@ private:
     void ShowReplayButtons();
     void ShowTileInspection();
     void ShowHelp() const;
+    void ShowHoveringGridPosition() const;
 
     // Utils
     bool AreAllGridsSameSize() const;

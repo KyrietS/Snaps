@@ -305,6 +305,7 @@ void TestScenePreview::ShowGui() {
     ShowButtons();
     ShowTileInspection();
     ShowHelp();
+    ShowHoveringGridPosition();
 }
 
 void TestScenePreview::ShowButtons() {
@@ -471,6 +472,20 @@ void TestScenePreview::ShowHelp() const {
     GuiDrawTextWithBg("Quit: Escape", helpLineRect, TEXT_ALIGN_LEFT, WHITE);
     helpLineRect.y -= 20;
     GuiDrawTextWithBg("Play: Space", helpLineRect, TEXT_ALIGN_LEFT, WHITE);
+}
+
+void TestScenePreview::ShowHoveringGridPosition() const {
+    if (not m_HoveredGridPosition) return;
+
+    const Rectangle hoverPosRect = {
+        .x = static_cast<float>(GetScreenWidth()) - 100,
+        .y = static_cast<float>(GetScreenHeight()) - 20,
+        .width = 50,
+        .height = 10
+    };
+    const int gridX = m_HoveredGridPosition->first;
+    const int gridY = m_HoveredGridPosition->second;
+    GuiDrawTextWithBg(TextFormat("(%d, %d)", gridX, gridY), hoverPosRect, TEXT_ALIGN_RIGHT, WHITE);
 }
 
 bool TestScenePreview::AreAllGridsSameSize() const {
