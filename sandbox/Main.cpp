@@ -13,50 +13,76 @@
 constexpr Color STONE_COLOR = {128, 128, 128, 255};
 constexpr Color SAND_COLOR = {194, 178, 128, 255};
 
+static bool s_ShowClaims = true;
 
 namespace snaps {
 
 bool tick = false;
 
-void InitializeMap(Grid& grid) {
-    for (int gridX = 10; gridX < 50; gridX++) {
-        const int gridY = GetScreenHeight() / BOX_SIZE - 5;
-        const float worldX = static_cast<float>(gridX) * BOX_SIZE;
-        const float worldY = static_cast<float>(gridY) * BOX_SIZE;
-        grid[gridX, gridY] = Block {
-            .WorldPosition = {worldX, worldY},
-            .FillColor = STONE_COLOR,
-            .IsDynamic = false
-        };
-    }
-
-    grid[11, GetScreenHeight() / BOX_SIZE - 6] = Block {
-        .WorldPosition = {11 * BOX_SIZE, (static_cast<float>(GetScreenHeight()) / BOX_SIZE - 6) * BOX_SIZE},
+Block StoneBlock(int x, int y) {
+    return Block {
+        .WorldPosition = {static_cast<float>(x) * BOX_SIZE, static_cast<float>(y) * BOX_SIZE},
         .FillColor = STONE_COLOR,
         .IsDynamic = false
     };
+}
 
-    for (int gridX = 10; gridX < 20; gridX++) {
-        const int gridY = GetScreenHeight() / BOX_SIZE - 20;
-        const float worldX = static_cast<float>(gridX) * BOX_SIZE;
-        const float worldY = static_cast<float>(gridY) * BOX_SIZE;
-        grid[gridX, gridY] = Block {
-            .WorldPosition = {worldX, worldY},
-            .FillColor = STONE_COLOR,
-            .IsDynamic = false
-        };
+Block SandBlock(int x, int y) {
+    return Block {
+        .WorldPosition = {static_cast<float>(x) * BOX_SIZE, static_cast<float>(y) * BOX_SIZE},
+        .FillColor = SAND_COLOR,
+        .IsDynamic = true
+    };
+}
+
+void SetStone(Grid& grid, int x, int y) {
+    grid[x, y] = StoneBlock(x, y);
+}
+
+void InitializeMap(Grid& grid) {
+
+    const int gridWidth = GetScreenWidth() / BOX_SIZE;
+    const int gridHeight = GetScreenHeight() / BOX_SIZE - 3;
+
+    // TOP-BOTTOM border
+    for (int x = 0; x <= gridWidth; x++) {
+        SetStone(grid, x, 0);
+        SetStone(grid, x, 1);
+        SetStone(grid, x, GetScreenHeight() / BOX_SIZE - 3);
+        SetStone(grid, x , GetScreenHeight() / BOX_SIZE - 4);
+    }
+    // LEFT-RIGHT border
+    for (int y = 0; y <= gridHeight; y++) {
+        SetStone(grid, 0, y);
+        SetStone(grid, 1, y);
+        SetStone(grid, gridWidth - 1, y);
+        SetStone(grid, gridWidth - 2, y);
+    }
+
+    // shelves
+    for (int x = 2; x <= 5; x++) {
+        SetStone(grid, x, 6);
+    }
+    for (int x = 15; x <= 17; x++) {
+        SetStone(grid, x, 10);
+    }
+    for (int x = 9; x <= 10; x++) {
+        SetStone(grid, x, 10);
     }
 }
 
 void DrawUi(const Grid& grid) {
-    DrawFPS(10, GetScreenHeight() - 20);
+    DrawFPS(10, GetScreenHeight() - 25);
 
-    for (int y = 0; y < grid.Height(); y++) {
-        for (int x = 0; x < grid.Width(); x++) {
-            const auto& block = grid[x, y];
-            if (block.has_value()) {
-                Color color = block->IsDynamic ? BLUE : RED;
-                DrawRectangleLines(x * BOX_SIZE, y * BOX_SIZE, BOX_SIZE, BOX_SIZE, color);
+    // Claimed tiles
+    if (s_ShowClaims) {
+        for (int y = 0; y < grid.Height(); y++) {
+            for (int x = 0; x < grid.Width(); x++) {
+                const auto& block = grid[x, y];
+                if (block.has_value()) {
+                    Color color = block->IsDynamic ? BLUE : RED;
+                    DrawRectangleLines(x * BOX_SIZE, y * BOX_SIZE, BOX_SIZE, BOX_SIZE, color);
+                }
             }
         }
     }
@@ -91,6 +117,13 @@ void HandleInput(Grid& grid) {
             .WorldPosition = {static_cast<float>(worldPosX), static_cast<float>(worldPosY)},
             .FillColor = SAND_COLOR,
             .IsDynamic = true
+        };
+    }
+    if (IsMouseButtonDown(MOUSE_BUTTON_MIDDLE)) {
+        grid[gridPosX, gridPosY] = Block {
+            .WorldPosition = {static_cast<float>(worldPosX), static_cast<float>(worldPosY)},
+            .FillColor = STONE_COLOR,
+            .IsDynamic = false
         };
     }
     if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
@@ -128,6 +161,10 @@ void HandleInput(Grid& grid) {
     if (IsKeyReleased(KEY_SPACE)) {
         tick = true;
     }
+
+    if (IsKeyPressed(KEY_TAB)) {
+        s_ShowClaims = not s_ShowClaims;
+    }
 }
 
 void Draw(const Grid& grid) {
@@ -141,10 +178,10 @@ void Draw(const Grid& grid) {
 
 
 int main() {
-    constexpr int screenWidth = 800;
-    constexpr int screenHeight = 450;
+    constexpr int screenWidth = 320;
+    constexpr int screenHeight = 320;
 
-    InitWindow(screenWidth, screenHeight, "Simple Raylib Window - Snaps App");
+    InitWindow(screenWidth, screenHeight, "Snaps Sandbox");
     SetTargetFPS(60);
 
     snaps::Grid grid(100, 100);
