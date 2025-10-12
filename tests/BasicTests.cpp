@@ -104,6 +104,10 @@ TEST_F(BasicSceneTest, FreeFallOnTopOfEachOther) {
     EXPECT_SCENE(m_Scene, check::BlockIsDynamicAt(2, 3));
     EXPECT_SCENE(m_Scene, check::BlockIsMovingDownAt(2, 3));
 
+    m_Scene->Tick();
+    // EXPECT_SCENE(m_Scene, check::BlockIsMovingDownAt(2, 2)); FIXME it collides mid-air with block below
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingDownAt(2, 3));
+
     m_Scene->TickTime(0.5);
     EXPECT_SCENE(m_Scene, check::BlockIsDynamicAt(2, 3));
     EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(2, 3));
