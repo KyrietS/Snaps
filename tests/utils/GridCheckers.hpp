@@ -1,8 +1,10 @@
 #pragma once
-#include <set>
-#include <unordered_set>
-
+#include "utils/Printers.hpp"
 #include "snaps/Grid.hpp"
+#include <set>
+#include <gtest/gtest.h>
+#include <gmock/gmock-matchers.h>
+
 
 namespace snaps
 {
@@ -38,13 +40,44 @@ public:
     virtual CheckResult Check(const snaps::Grid& grid) const = 0;
 };
 
-struct BlockIsEmptyAt : GridChecker
+struct Block : GridChecker {
+    Block(const int gridX, const int gridY, const testing::Matcher<const snaps::Block&>& blockMatcher)
+        : m_GridX(gridX), m_GridY(gridY), m_BlockMatcher(blockMatcher) {}
+    CheckResult Check(const snaps::Grid& grid) const override {
+        const auto& block = grid[m_GridX, m_GridY];
+        const bool matches = block and m_BlockMatcher.Matches(block.value());
+
+        std::ostringstream matchSummary;
+        m_BlockMatcher.DescribeTo(&matchSummary);
+
+        if (block.has_value() and not matches) {
+            std::stringstream explanation;
+            m_BlockMatcher.ExplainMatchResultTo(block.value(), &explanation);
+            if (not explanation.str().empty()) {
+                matchSummary << ". Actual block " << explanation.str();
+            }
+        } else if (not block.has_value()) {
+            matchSummary << ". Actual block is empty";
+        }
+
+        CheckResult result;
+        result.Success = matches;
+        result.Summary = std::format("Expected block {} at ({}, {})", matchSummary.str(), m_GridX, m_GridY);
+        result.Positions.insert({m_GridX, m_GridY});
+        return result;
+    }
+    const int m_GridX;
+    const int m_GridY;
+    const testing::Matcher<const snaps::Block&> m_BlockMatcher;
+};
+
+struct EmptyBlock : GridChecker
 {
-    BlockIsEmptyAt(const int gridX, const int gridY) : m_GridX(gridX), m_GridY(gridY) {}
+    EmptyBlock(const int gridX, const int gridY) : m_GridX(gridX), m_GridY(gridY) {}
     CheckResult Check(const snaps::Grid& grid) const override
     {
         const auto& block = grid[m_GridX, m_GridY];
-        const std::string summary = std::format("Expected empty block at ({}, {})", m_GridX, m_GridY);
+        const std::string summary = std::format("Expected block is empty at ({}, {})", m_GridX, m_GridY);
         if (not block) {
             return CheckResult::OkAt(m_GridX, m_GridY, summary);
         }
@@ -56,61 +89,64 @@ private:
     const int m_GridY;
 };
 
+inline auto BlockIsEmptyAt(const int gridX, const int gridY) {
+    return EmptyBlock(gridX, gridY);
+}
 
-struct SingleGridChecker : GridChecker {
-    SingleGridChecker(const int gridX, const int gridY) : m_GridX(gridX), m_GridY(gridY) {}
-    CheckResult Check(const snaps::Grid& grid) const override {
-        const auto& block = grid[m_GridX, m_GridY];
-        const std::string summary = std::format("Expected {} at ({}, {})", Expectation(), m_GridX, m_GridY);
-        if (block and Check(block.value())) {
-            return CheckResult::OkAt(m_GridX, m_GridY, summary);
-        }
-        return CheckResult::FailAt(m_GridX, m_GridY, summary);
-    }
+MATCHER(IsDynamic, "") {
+    return arg.IsDynamic;
+}
+inline auto BlockIsDynamicAt(const int gridX, const int gridY) {
+    return Block(gridX, gridY, IsDynamic());
+}
 
-    virtual bool Check(const snaps::Block& block) const = 0;
-    virtual std::string Expectation() const = 0;
+MATCHER(IsStatic, "") {
+    return not arg.IsDynamic;
+}
+inline auto BlockIsStaticAt(const int gridX, const int gridY) {
+    return Block(gridX, gridY, IsStatic());
+}
 
-protected:
-    const int m_GridX;
-    const int m_GridY;
-};
+MATCHER_P2(IsAligned, x, y, std::format("is aligned to ({}, {})", x, y)){
+    const Vector2 expectedPos = {static_cast<float>(x), static_cast<float>(y)};
+    return arg.WorldPosition == expectedPos;
+}
+inline auto BlockIsAlignedAt(const int gridX, const int gridY) {
+    return Block(gridX, gridY, IsAligned(gridX * snaps::BOX_SIZE, gridY * snaps::BOX_SIZE));
+}
 
-struct BlockIsDynamicAt : SingleGridChecker
-{
-    BlockIsDynamicAt(const int gridX, const int gridY) : SingleGridChecker(gridX, gridY) {}
-    bool Check(const snaps::Block& block) const override
-    {
-        return block.IsDynamic;
-    }
-    std::string Expectation() const override { return "dynamic block"; }
-};
+inline testing::Matcher<Vector2> Vector(const testing::Matcher<float>& x, const testing::Matcher<float>& y) {
+    return testing::AllOf(
+        testing::Field("x", &Vector2::x, x),
+        testing::Field("y", &Vector2::y, y)
+    );
+}
+inline auto BlockVelocityIsAt(const int gridX, const int gridY, const testing::Matcher<Vector2>& velocity) {
+    return Block(gridX, gridY, Field("Velocity", &snaps::Block::Velocity, velocity));
+}
 
-struct BlockIsStaticAt : SingleGridChecker
-{
-    BlockIsStaticAt(const int gridX, const int gridY) : SingleGridChecker(gridX, gridY) {}
-    bool Check(const snaps::Block& block) const override
-    {
-        return not block.IsDynamic;
-    }
-    std::string Expectation() const override { return "static block"; }
-};
+MATCHER_P2(Velocity, x, y, std::format("velocity ({}, {})", x, y)) {
+    *result_listener << "velocity " << arg.Velocity;
+    return arg.Velocity == Vector2{ x, y };
+}
+inline auto BlockVelocityAt(const int gridX, const int gridY, const Vector2 vector) {
+    return Block(gridX, gridY, Velocity(vector.x, vector.y));
+}
 
-struct BlockIsAlignedAt : SingleGridChecker
-{
-    BlockIsAlignedAt(const int gridX, const int gridY)
-        : SingleGridChecker(gridX, gridY), m_ExpectedX(gridX * snaps::BOX_SIZE), m_ExpectedY(gridY * snaps::BOX_SIZE) {}
-    bool Check(const snaps::Block& block) const override
-    {
-        const Vector2 expectedPos = {static_cast<float>(m_ExpectedX), static_cast<float>(m_ExpectedY)};
-        return block.WorldPosition == expectedPos;
-    }
-    std::string Expectation() const override {
-        return std::format("block aligned ({}, {}) to grid", m_ExpectedX, m_ExpectedY);
-    }
+MATCHER(IsNotMoving, "") {
+    *result_listener << "velocity " << arg.Velocity;
+    return arg.Velocity == Vector2{ 0, 0 };
+}
+inline auto BlockIsNotMovingAt(const int gridX, const int gridY) {
+    return Block(gridX, gridY, IsNotMoving());
+}
 
-    const int m_ExpectedX;
-    const int m_ExpectedY;
-};
+MATCHER(IsMovingDown, "") {
+    *result_listener << "velocity " << arg.Velocity;
+    return arg.Velocity.y > 0.0f;
+}
+inline auto BlockIsMovingDownAt(const int gridX, const int gridY) {
+    return Block(gridX, gridY, IsMovingDown());
+}
 
 }
