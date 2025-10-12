@@ -116,3 +116,50 @@ TEST_F(BasicSceneTest, FreeFallOnTopOfEachOther) {
     EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(2, 2));
     EXPECT_SCENE(m_Scene, check::BlockIsNotMovingAt(2, 2));
 }
+
+// TODO Test: Block stopped mid-tile should be snapped (aligned)
+
+// TODO Test impulse: Impulse too weak to slide due to friction
+// TODO Test impulse: Impulse too weak to jump due to gravity
+// TODO Test impulse: Impulse too strong that exceeds max speed limit
+// TODO Test impulse: Impulse to the right when in mid-air
+// TODO Test impulse: Impulse angular
+// TODO Test impulse: Impulse stops block mid-tile
+
+// TODO Test slide: Slide and stop due to friction
+// TODO Test slide: Slide and stop due hit solid block
+// TODO Test slide: Slide and stop due hit dynamic block
+// TODO Test slide: Slide 3 blocks next to each other
+// TODO Test slide: Slide 3 blocks on top of each other
+// TODO Test slide: Slide over the edge and fall vertically due to wall
+// TODO Test slide: Slide and fall into the hole
+
+// TODO Test projection: Horizontal projection hit wall and fall
+// TODO Test projection: Horizontal projection hit floor slide and stop
+// TODO Test projection: angular projection hit wall go up and fall
+// TODO Test projection: angular projection hit ceiling and fall
+
+// TODO Test edge: Go over the edge going right and down
+// TODO Test edge: Go over the edge going left and down
+// TODO Test edge: Go over the edge going right and up
+// TODO Test edge: Go over the edge going left and up
+// TODO Test edge: Go under the edge going right and down
+// TODO Test edge: Go under the edge going left and down
+// TODO Test edge: Go under the edge going right and up
+// TODO Test edge: Go under the edge going left and up
+
+// TODO Test collision of 2: Move 2 blocks horizontally from the opposite directions and stop due to collision
+// TODO Test collision of 2: Move 2 blocks horizontally in the same direction and stop due to collision (one block is slower)
+// TODO Test collision of 2: Move 2 blocks vertically from the opposite directions and stop due to collision
+// TODO Test collision of 2: Move 2 blocks vertically in the same direction and stop due to collision
+
+// TODO Test friction: Greater mass means stronger friction
+// TODO Test friction: Slide when bottom block has no friction
+// TODO Test friction: Slide when upper block has no friction
+// TODO Test friction: Slide between blocks with different friction
+// TODO Test friction: No friction when 2 blocks are sliding on each other
+
+// TODO Test grid bounds: Block stops at bottom
+// TODO Test grid bounds: Block stops at top
+// TODO Test grid bounds: Block stops at left
+// TODO Test grid bounds: Block stops at right

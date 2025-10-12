@@ -57,7 +57,12 @@ inline void ApplyFriction(Block& block, float multiplier = 1.0f) {
     block.ForceAccum.x -= frictionForce;
 }
 
-// Impulse is an immediate change in velocity, i.e. velocity * mass
+/**
+ * Applies an impulse force to the block, changing its velocity immediately.
+ * The impulse is scaled by the block's mass so that heavier blocks need stronger impulse to move.
+ * @param block the block to apply the impulse to
+ * @param impulse the impulse vector to apply, this is a force
+ */
 inline void ApplyImpulse(Block& block, const Vector2 impulse) {
     block.Velocity += impulse * block.InvMass;
 }
