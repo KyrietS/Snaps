@@ -1,12 +1,13 @@
 #include "TestScenePreview.hpp"
 
-#include <algorithm>
-#include <cassert>
 #include <raylib.h>
-
 #define RAYGUI_IMPLEMENTATION
 #include <raygui/raygui.h>
 #include <raygui/style_dark.h>
+
+#include <cmath>
+#include <algorithm>
+#include <cassert>
 
 namespace {
 std::pair<int, int> ToWindowCoordinates(const snaps::Block& block) {
@@ -270,7 +271,7 @@ Camera2D TestScenePreview::GetPreviewCamera() const {
 }
 
 float TestScenePreview::GetZoomLevel() const {
-    return m_ZoomLevelIndex == 0 ? 1.0f : std::powf( 2.0f, static_cast<float>(m_ZoomLevelIndex) + 1);
+    return m_ZoomLevelIndex == 0 ? 1.0f : std::pow( 2.0f, static_cast<float>(m_ZoomLevelIndex) + 1);
 }
 
 const snaps::Grid & TestScenePreview::GetSelectedGrid() const {

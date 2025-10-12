@@ -3,7 +3,7 @@
 #include "snaps/Constants.hpp"
 #include <raymath.h>
 #include <iostream>
-
+#include <cmath>
 
 
 namespace snaps {
@@ -131,7 +131,7 @@ void SnapsEngine::SolveMovementLeft(int& x, int& y, Block& block) {
     // [DECELERATION ONLY]
     // Desired grid is free. Claim it if we have enough velocity to reach it.
     if (wantsToMoveLeft and not blockLeft.has_value()) {
-        const float minVelocityToReachNextGrid = std::sqrtf(2.0f * deceleration * BOX_SIZE);
+        const float minVelocityToReachNextGrid = std::sqrt(2.0f * deceleration * BOX_SIZE);
 
         // Not enough velocity to reach the next grid. Stop and align to grid.
         if (std::abs(block.Velocity.x) < minVelocityToReachNextGrid) {
@@ -178,7 +178,7 @@ void SnapsEngine::SolveMovementRight(int& x, int& y, Block& block) {
     // [DECELERATION ONLY]
     // Desired grid is free. Claim it if we have enough velocity to reach it.
     if (wantsToMoveRight and not blockRight.has_value()) {
-        const float minVelocityToReachNextGrid = std::sqrtf(2.0f * deceleration * BOX_SIZE);
+        const float minVelocityToReachNextGrid = std::sqrt(2.0f * deceleration * BOX_SIZE);
 
         // Not enough velocity to reach next grid. Stop and align to grid.
         if (std::abs(block.Velocity.x) < minVelocityToReachNextGrid) {
@@ -269,10 +269,10 @@ void SnapsEngine::SolveMovementUp(int& x, int& y, Block& block) {
     // [DECELERATION ONLY]
     // Desired grid is free. Claim it if we have enough velocity to reach it.
     if (wantsToMoveUp and not blockAbove.has_value()) {
-        const float minVelocityToReachNextGrid = std::sqrtf(2.0f * GRAVITY * BOX_SIZE);
+        const float minVelocityToReachNextGrid = std::sqrt(2.0f * GRAVITY * BOX_SIZE);
         // More accurate check if next grid is reachable
         // const float distanceToReachNextGrid = block.WorldPosition.y - desiredYGrid * BOX_SIZE;
-        // const float minVelocityToReachNextGrid = std::sqrtf(2.0f * GRAVITY * distanceToReachNextGrid);
+        // const float minVelocityToReachNextGrid = std::sqrt(2.0f * GRAVITY * distanceToReachNextGrid);
 
         // Not enough velocity to reach next grid. Stop.
         if (std::abs(block.Velocity.y) < minVelocityToReachNextGrid) {
