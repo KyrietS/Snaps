@@ -1,0 +1,41 @@
+name: build-linux
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    name: Build (Linux)
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        build_type: [Release, Debug]
+        compiler: [gcc, clang]
+        include:
+          - compiler: gcc
+            cc: gcc
+            cxx: g++
+          - compiler: clang
+            cc: clang
+            cxx: clang++
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install dependencies (X11)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xorg-dev
+
+      - name: Configure CMake
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DCMAKE_C_COMPILER=${{ matrix.cc }} -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}
+
+      - name: Build Engine
+        run: cmake --build build --config ${{ matrix.build_type }} --target Snaps -j
+
+      - name: Build Sandbox
+        run: cmake --build build --config ${{ matrix.build_type }} --target SnapsSandbox -j
+
+      - name: Build Tests
+        run: cmake --build build --config ${{ matrix.build_type }} --target SnapsTests -j
