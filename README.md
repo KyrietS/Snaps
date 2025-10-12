@@ -1,5 +1,7 @@
 # Snaps Physics
 
+[![build-windows](https://github.com/KyrietS/Snaps/actions/workflows/build-windows.yml/badge.svg)](https://github.com/KyrietS/Snaps/actions/workflows/build-windows.yml) [![build-linux](https://github.com/KyrietS/Snaps/actions/workflows/build-linux.yml/badge.svg)](https://github.com/KyrietS/Snaps/actions/workflows/build-linux.yml)
+
 Snaps is a 2D physics engine where every object ultimately "snaps" to a grid.\
 Its purpose is to enable 2D tile-based games to have smooth and reasonably realistic physics.
 
