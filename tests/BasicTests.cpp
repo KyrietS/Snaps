@@ -117,7 +117,35 @@ TEST_F(BasicSceneTest, FreeFallOnTopOfEachOther) {
     EXPECT_SCENE(m_Scene, check::BlockIsNotMovingAt(2, 2));
 }
 
-// TODO Test: Block stopped mid-tile should be snapped (aligned)
+TEST_F(BasicSceneTest, BlockSpawnedMidTileShouldBeAligned) {
+    InitializeTestScene(5, 5);
+    AddSand(2, 3); // spawn on ground
+    GetBlock(2, 3).WorldPosition.x += snaps::BOX_SIZE / 2; // move right mid-tile
+
+    EXPECT_SCENE(m_Scene, check::Not(check::BlockIsAlignedAt(2, 3)));
+    m_Scene->Tick();
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(2, 3));
+}
+
+TEST_F(BasicSceneTest, BlockStoppedMidTileShouldBeAligned) {
+    InitializeTestScene(5, 5);
+    AddSand(1, 1);
+    GetBlock(1, 1).Velocity.x = snaps::BOX_SIZE;
+
+    m_Scene->TickTime(0.5);
+
+    constexpr int finalPosX = 2;
+    constexpr int finalPosY = 3;
+    EXPECT_SCENE(m_Scene, check::Not(check::BlockIsAlignedAt(finalPosX, finalPosY)));
+
+    GetBlock(finalPosX, finalPosY).Velocity.x = 0; // horizontal movement stopped mid-tile
+    m_Scene->Tick();
+    EXPECT_SCENE(m_Scene, check::BlockIsXAlignedAt(finalPosX, finalPosY)); // X aligned, Y not aligned (yet)
+    EXPECT_SCENE(m_Scene, check::Not(check::BlockIsAlignedAt(finalPosX, finalPosY)));
+
+    m_Scene->TickTime(0.2); // total alignment (snapping to grid) should happen during this time
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(finalPosX, finalPosY));
+}
 
 // TODO Test impulse: Impulse too weak to slide due to friction
 // TODO Test impulse: Impulse too weak to jump due to gravity

@@ -71,6 +71,11 @@ struct Block : GridChecker {
     const testing::Matcher<const snaps::Block&> m_BlockMatcher;
 };
 
+struct Not : Block {
+    explicit Not(const Block& other)
+        : Block(other.m_GridX, other.m_GridY, testing::Not(other.m_BlockMatcher)) {}
+};
+
 struct EmptyBlock : GridChecker
 {
     EmptyBlock(const int gridX, const int gridY) : m_GridX(gridX), m_GridY(gridY) {}
@@ -107,12 +112,19 @@ inline auto BlockIsStaticAt(const int gridX, const int gridY) {
     return Block(gridX, gridY, IsStatic());
 }
 
-MATCHER_P2(IsAligned, x, y, std::format("is aligned to ({}, {})", x, y)){
+MATCHER_P2(IsAligned, x, y, std::format("is{} aligned to ({}, {})", (negation ? " not" : ""), x, y)) {
     const Vector2 expectedPos = {static_cast<float>(x), static_cast<float>(y)};
     return arg.WorldPosition == expectedPos;
 }
 inline auto BlockIsAlignedAt(const int gridX, const int gridY) {
     return Block(gridX, gridY, IsAligned(gridX * snaps::BOX_SIZE, gridY * snaps::BOX_SIZE));
+}
+MATCHER_P(IsXAligned, x, std::format("is{} X-aligned to ({}, _)", (negation ? " not" : ""), x)) {
+    const float expectedXPos = static_cast<float>(x);
+    return arg.WorldPosition.x == expectedXPos;
+}
+inline auto BlockIsXAlignedAt(const int gridX, const int gridY) {
+    return Block(gridX, gridY, IsXAligned(gridX * snaps::BOX_SIZE));
 }
 
 inline testing::Matcher<Vector2> Vector(const testing::Matcher<float>& x, const testing::Matcher<float>& y) {

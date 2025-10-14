@@ -34,6 +34,19 @@ void SceneTest::TearDown() {
 }
 
 void SceneTest::AddSand(const int x, const int y) const {
+    auto& block = GetBlockOpt(x, y);
+    block = SandBlock(x * snaps::BOX_SIZE, y * snaps::BOX_SIZE);
+}
+
+snaps::Block & SceneTest::GetBlock(const int x, const int y) const {
+    auto& blockOpt = GetBlockOpt(x, y);
+    assert(blockOpt.has_value());
+    return blockOpt.value();
+}
+
+std::optional<snaps::Block>& SceneTest::GetBlockOpt(const int x, const int y) const {
     assert(m_Grid);
-    (*m_Grid)[x, y] = SandBlock(x * snaps::BOX_SIZE, y * snaps::BOX_SIZE);
+    assert(x >= 0 and x < m_Grid->Width());
+    assert(y >= 0 and y < m_Grid->Height());
+    return (*m_Grid)[x, y];
 }
