@@ -152,6 +152,7 @@ TEST_F(BasicSceneTest, FreeFallOnTopOfEachOther) {
 // TODO Test collision of 2: Move 2 blocks horizontally in the same direction and stop due to collision (one block is slower)
 // TODO Test collision of 2: Move 2 blocks vertically from the opposite directions and stop due to collision
 // TODO Test collision of 2: Move 2 blocks vertically in the same direction and stop due to collision
+// TODO Test collision of 2: Try to move 2 neighbor blocks towards each other
 
 // TODO Test friction: Greater mass means stronger friction
 // TODO Test friction: Slide when bottom block has no friction
