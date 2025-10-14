@@ -1,6 +1,7 @@
 #include "SceneTest.hpp"
 #include "utils/TestScenePreview.hpp"
 #include "utils/TestGrid.hpp"
+#include "GlobalConfiguration.hpp"
 
 namespace {
 constexpr Color SAND_COLOR = { 194, 178, 128, 255 };
@@ -22,7 +23,7 @@ void SceneTest::InitializeTestScene(const int gridWidth, const int gridHeight) {
 
 void SceneTest::TearDown() {
     if (not m_Scene) return;
-    if (TestScene::s_ShowPreviewAlways or (m_Scene->HasAnyFailedChecks() and TestScene::s_ShowPreviewOnFailure)) {
+    if (GlobalConfiguration::Get().PreviewAlways or (m_Scene->HasAnyFailedChecks() and GlobalConfiguration::Get().PreviewOnFailure)) {
         try {
             TestScenePreview preview(*m_Scene);
             preview.Show();

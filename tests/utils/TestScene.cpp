@@ -1,12 +1,8 @@
 #include "TestScene.hpp"
 #include "DebugBreak.hpp"
-#include "TestScenePreview.hpp"
 #include <gtest/gtest.h>
 #include <algorithm>
 #include <ranges>
-
-bool TestScene::s_ShowPreviewOnFailure = true;
-bool TestScene::s_ShowPreviewAlways = true;
 
 TestScene::TestScene(snaps::SnapsEngine& engine, snaps::Grid& grid)
     : m_Engine(engine)

@@ -9,9 +9,6 @@
 
 class TestScene {
 public:
-    static bool s_ShowPreviewOnFailure;
-    static bool s_ShowPreviewAlways;
-
     TestScene(snaps::SnapsEngine& engine, snaps::Grid& grid);
 
     /**
