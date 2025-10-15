@@ -1,15 +1,23 @@
+<div align="center">
+  
 # Snaps Physics
-
-[![build-windows](https://github.com/KyrietS/Snaps/actions/workflows/build-windows.yml/badge.svg)](https://github.com/KyrietS/Snaps/actions/workflows/build-windows.yml) [![build-linux](https://github.com/KyrietS/Snaps/actions/workflows/build-linux.yml/badge.svg)](https://github.com/KyrietS/Snaps/actions/workflows/build-linux.yml) [![tests](https://github.com/KyrietS/Snaps/actions/workflows/tests.yml/badge.svg)](https://github.com/KyrietS/Snaps/actions/workflows/tests.yml)
 
 Snaps is a 2D physics engine where every object ultimately "snaps" to a grid.\
 Its purpose is to enable 2D tile-based games to have smooth and reasonably realistic physics.
 
-### Playing with sand
+[![build-windows](https://github.com/KyrietS/Snaps/actions/workflows/build-windows.yml/badge.svg)](https://github.com/KyrietS/Snaps/actions/workflows/build-windows.yml) [![build-linux](https://github.com/KyrietS/Snaps/actions/workflows/build-linux.yml/badge.svg)](https://github.com/KyrietS/Snaps/actions/workflows/build-linux.yml) [![tests](https://github.com/KyrietS/Snaps/actions/workflows/tests.yml/badge.svg)](https://github.com/KyrietS/Snaps/actions/workflows/tests.yml)
+
+
+
+---
+
+<!--### Playing with sand-->
 
 ![Demo](https://github.com/user-attachments/assets/7a890a51-4708-44ad-84a6-1ac1431cc91b)
 
 🚧 This project is currently a work in progress 🚧
+
+</div>
 
 ## Features
 
