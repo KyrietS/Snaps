@@ -411,10 +411,91 @@ TEST_F(SlideTest, SlideAndFallIntoTheHole) {
     EXPECT_SCENE(m_Scene, check::BlockIsDynamicAt(3, 3));
 }
 
-// TODO Test projection: Horizontal projection hit wall and fall
-// TODO Test projection: Horizontal projection hit floor slide and stop
-// TODO Test projection: angular projection hit wall go up and fall
-// TODO Test projection: angular projection hit ceiling and fall
+struct ProjectionTest : SceneTest {};
+
+TEST_F(ProjectionTest, HorizontalProjectionHitWallAndFall) {
+    InitializeTestScene(6, 5);
+    AddSand(2, 1);
+    AddSand(3, 1);
+    GetBlock(2, 1).Velocity.x = -50.0;
+    GetBlock(3, 1).Velocity.x = +50.0;
+
+    m_Scene->TickTime(0.8f);
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(1, 3));
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(4, 3));
+}
+
+TEST_F(ProjectionTest, HorizontalProjectionRightHitFloorSlideAndStop) {
+    InitializeTestScene(16, 5);
+    AddSand(1, 2);
+    GetBlock(1, 2).Velocity.x = +200.0f;
+
+    m_Scene->TickTime(1.0f);
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(9, 3));
+}
+
+TEST_F(ProjectionTest, HorizontalProjectionLeftHitFloorSlideAndStop) {
+    InitializeTestScene(16, 5);
+    AddSand(14, 2);
+    GetBlock(14, 2).Velocity.x = -200.0f;
+
+    m_Scene->TickTime(1.0f);
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(6, 3));
+}
+
+TEST_F(ProjectionTest, AngularProjectionRightHitWallAndGoUp) {
+    InitializeTestScene(5, 10);
+    AddSand(2, 8);
+    GetBlock(2, 8).Velocity = {200.0f, -200.0f};
+
+    m_Scene->TickTime(0.5f);
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingUpAt(3, 3));
+    EXPECT_SCENE(m_Scene, check::Not(check::BlockIsMovingRightAt(3, 3)));
+
+    m_Scene->TickTime(0.5f);
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingDownAt(3, 3));
+    EXPECT_SCENE(m_Scene, check::Not(check::BlockIsMovingRightAt(3, 3)));
+}
+
+TEST_F(ProjectionTest, AngularProjectionLeftHitWallAndGoUp) {
+    InitializeTestScene(5, 10);
+    AddSand(2, 8);
+    GetBlock(2, 8).Velocity = {-200.0f, -200.0f};
+
+    m_Scene->TickTime(0.5f);
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingUpAt(1, 3));
+    EXPECT_SCENE(m_Scene, check::Not(check::BlockIsMovingRightAt(1, 3)));
+
+    m_Scene->TickTime(0.5f);
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingDownAt(1, 3));
+    EXPECT_SCENE(m_Scene, check::Not(check::BlockIsMovingRightAt(1, 3)));
+}
+
+TEST_F(ProjectionTest, AngularProjectionRightHitCeilingAndFall) {
+    InitializeTestScene(10, 5);
+    AddSand(2, 3);
+    GetBlock(2, 3).Velocity = {100.0f, -400.0f};
+
+    m_Scene->Tick();
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingRightAt(3, 2));
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingUpAt(3, 2));
+    m_Scene->TickTime(0.3f);
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingDownAt(4, 2));
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingRightAt(4, 2));
+}
+
+TEST_F(ProjectionTest, AngularProjectionLeftHitCeilingAndFall) {
+    InitializeTestScene(10, 5);
+    AddSand(7, 3);
+    GetBlock(7, 3).Velocity = {-100.0f, -400.0f};
+
+    m_Scene->Tick();
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingLeftAt(6, 2));
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingUpAt(6, 2));
+    m_Scene->TickTime(0.3f);
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingDownAt(5, 2));
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingLeftAt(5, 2));
+}
 
 // TODO Test edge: Go over the edge going right and down
 // TODO Test edge: Go over the edge going left and down
