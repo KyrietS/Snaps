@@ -180,4 +180,12 @@ inline auto BlockIsMovingRightAt(const int gridX, const int gridY) {
     return Block(gridX, gridY, IsMovingRight());
 }
 
+MATCHER(IsMovingLeft, "") {
+    *result_listener << "velocity " << arg.Velocity;
+    return arg.Velocity.x < 0.0f;
+}
+inline auto BlockIsMovingLeftAt(const int gridX, const int gridY) {
+    return Block(gridX, gridY, IsMovingLeft());
+}
+
 }

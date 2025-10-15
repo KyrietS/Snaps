@@ -3,7 +3,7 @@
 
 class TestScenePreview {
 public:
-    explicit TestScenePreview(const TestScene& scene);
+    explicit TestScenePreview(const TestScene& scene, std::string title = "Test Scene Preview");
 
     void Show();
 
@@ -45,6 +45,7 @@ private:
 
 
     const TestScene& m_Scene;
+    const std::string m_Title;
 
     // UI state
     int m_SelectedFrameIndex = 0;

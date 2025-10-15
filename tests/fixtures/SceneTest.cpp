@@ -22,6 +22,11 @@ snaps::Block StoneBlock(const int x, const int y) {
         .IsDynamic = false
     };
 }
+std::string GetTestName() {
+    const auto* testInfo = ::testing::UnitTest::GetInstance()->current_test_info();
+    if (not testInfo) return "<unknown test>";
+    return std::format("{}.{}", testInfo->test_suite_name(), testInfo->name());
+}
 }
 
 void SceneTest::InitializeTestScene(const int gridWidth, const int gridHeight) {
@@ -34,7 +39,7 @@ void SceneTest::TearDown() {
     if (not m_Scene) return;
     if (GlobalConfiguration::Get().PreviewAlways or (m_Scene->HasAnyFailedChecks() and GlobalConfiguration::Get().PreviewOnFailure)) {
         try {
-            TestScenePreview preview(*m_Scene);
+            TestScenePreview preview(*m_Scene, GetTestName());
             preview.Show();
         } catch (...) {
             FAIL() << "Exception thrown while showing TestScenePreview";

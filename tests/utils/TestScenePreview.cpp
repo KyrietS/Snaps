@@ -8,6 +8,7 @@
 #include <cmath>
 #include <algorithm>
 #include <cassert>
+#include <utility>
 
 namespace {
 std::pair<int, int> ToWindowCoordinates(const snaps::Block& block) {
@@ -47,8 +48,9 @@ void GuiDrawTextWithBg(const char *text, Rectangle textBounds, int alignment, Co
 }
 }
 
-TestScenePreview::TestScenePreview(const TestScene &scene)
+TestScenePreview::TestScenePreview(const TestScene &scene, std::string  title)
     : m_Scene(scene)
+    , m_Title(std::move(title))
     , m_SelectedFrameIndex(static_cast<int>(m_Scene.GetGridHistory().size())) {
     assert(AreAllGridsSameSize() && "Scenes with different grid sizes are not supported");
 }
@@ -58,7 +60,7 @@ void TestScenePreview::Show() {
     constexpr int screenHeight = 500;
 
     SetTraceLogLevel(LOG_ERROR);
-    InitWindow(screenWidth, screenHeight, "Snaps Test Scene Preview");
+    InitWindow(screenWidth, screenHeight, m_Title.c_str());
     SetWindowState(FLAG_WINDOW_RESIZABLE);
     SetWindowMinSize(screenWidth, screenHeight);
     SetTargetFPS(static_cast<int>(1.0f / m_Scene.GetDeltaTime()));

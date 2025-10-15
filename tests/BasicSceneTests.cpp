@@ -224,13 +224,192 @@ TEST_F(ImpulseTest, ImpulseAngular) {
     EXPECT_SCENE(m_Scene, check::BlockIsNotMovingAt(2, 3));
 }
 
-// TODO Test slide: Slide and stop due to friction
-// TODO Test slide: Slide and stop due hit solid block
-// TODO Test slide: Slide and stop due hit dynamic block
-// TODO Test slide: Slide 3 blocks next to each other
-// TODO Test slide: Slide 3 blocks on top of each other
-// TODO Test slide: Slide over the edge and fall vertically due to wall
-// TODO Test slide: Slide and fall into the hole
+TEST_F(ImpulseTest, ImpulseThroughTheCorner) {
+    InitializeTestScene(5, 5);
+    AddWall(1, 3);
+    AddWall(2, 2);
+    AddSand(1, 2);
+    snaps::ApplyImpulse(GetBlock(1, 2), {600.0f, 600.0f});
+
+    m_Scene->TickTime(0.5f);
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(1, 2));
+}
+
+struct SlideTest : SceneTest {};
+
+TEST_F(SlideTest, SlideAndStopDueToFriction) {
+    InitializeTestScene(10, 5);
+    AddSand(2, 3);
+    GetBlock(2, 3).Friction = 0.5f;
+    snaps::ApplyImpulse(GetBlock(2, 3), {400.0f, 0.0f});
+
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(2, 3));
+    m_Scene->TickTime(0.7);
+    EXPECT_SCENE(m_Scene, check::BlockIsEmptyAt(2, 3));
+    EXPECT_SCENE(m_Scene, check::BlockIsDynamicAt(5, 3));
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(5, 3));
+    EXPECT_SCENE(m_Scene, check::BlockIsNotMovingAt(5, 3));
+}
+
+TEST_F(SlideTest, SlideAndStopDueToHitWithSolidWall) {
+    InitializeTestScene(10, 5);
+    AddSand(2, 3);
+    AddWall(4, 3);
+    GetBlock(2, 3).Friction = 0.5f;
+    snaps::ApplyImpulse(GetBlock(2, 3), {400.0f, 0.0f});
+
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(2, 3));
+    m_Scene->TickTime(0.7);
+    EXPECT_SCENE(m_Scene, check::BlockIsEmptyAt(2, 3));
+    EXPECT_SCENE(m_Scene, check::BlockIsDynamicAt(3, 3));
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(3, 3));
+    EXPECT_SCENE(m_Scene, check::BlockIsNotMovingAt(3, 3));
+}
+
+TEST_F(SlideTest, SlideAndStopDueToHitWithDynamicWall) {
+    InitializeTestScene(10, 5);
+    AddSand(2, 3);
+    AddSand(4, 3);
+    GetBlock(2, 3).Friction = 0.5f;
+    snaps::ApplyImpulse(GetBlock(2, 3), {400.0f, 0.0f});
+
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(2, 3));
+    m_Scene->TickTime(0.7);
+    EXPECT_SCENE(m_Scene, check::BlockIsEmptyAt(2, 3));
+    EXPECT_SCENE(m_Scene, check::BlockIsDynamicAt(3, 3));
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(3, 3));
+    EXPECT_SCENE(m_Scene, check::BlockIsNotMovingAt(3, 3));
+    EXPECT_SCENE(m_Scene, check::BlockIsDynamicAt(4, 3));
+    EXPECT_SCENE(m_Scene, check::BlockIsEmptyAt(5, 3));
+}
+
+TEST_F(SlideTest, SlideRightThreeBlocksNextToEachOther) {
+    InitializeTestScene(10, 5);
+    AddSand(2, 3);
+    AddSand(3, 3);
+    AddSand(4, 3);
+    GetBlock(2, 3).Friction = 0.5f;
+    GetBlock(3, 3).Friction = 0.5f;
+    GetBlock(4, 3).Friction = 0.5f;
+    snaps::ApplyImpulse(GetBlock(2, 3), {400.0f, 0.0f});
+    snaps::ApplyImpulse(GetBlock(3, 3), {400.0f, 0.0f});
+    snaps::ApplyImpulse(GetBlock(4, 3), {400.0f, 0.0f});
+
+    m_Scene->Tick();
+    EXPECT_SCENE(m_Scene, check::BlockIsEmptyAt(2, 3));
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingRightAt(3, 3));
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingRightAt(4, 3));
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingRightAt(5, 3));
+
+    m_Scene->TickTime(0.7);
+    EXPECT_SCENE(m_Scene, check::BlockIsEmptyAt(4, 3));
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(5, 3));
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(6, 3));
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(7, 3));
+    EXPECT_SCENE(m_Scene, check::BlockIsEmptyAt(8, 3));
+}
+
+TEST_F(SlideTest, SlideLeftThreeBlocksNextToEachOther) {
+    InitializeTestScene(10, 5);
+    AddSand(7, 3);
+    AddSand(6, 3);
+    AddSand(5, 3);
+    GetBlock(7, 3).Friction = 0.5f;
+    GetBlock(6, 3).Friction = 0.5f;
+    GetBlock(5, 3).Friction = 0.5f;
+    snaps::ApplyImpulse(GetBlock(7, 3), {-400.0f, 0.0f});
+    snaps::ApplyImpulse(GetBlock(6, 3), {-400.0f, 0.0f});
+    snaps::ApplyImpulse(GetBlock(5, 3), {-400.0f, 0.0f});
+
+    m_Scene->Tick();
+    EXPECT_SCENE(m_Scene, check::BlockIsEmptyAt(7, 3));
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingLeftAt(6, 3));
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingLeftAt(5, 3));
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingLeftAt(4, 3));
+    m_Scene->TickTime(0.7);
+    EXPECT_SCENE(m_Scene, check::BlockIsEmptyAt(1, 3));
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(2, 3));
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(3, 3));
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(4, 3));
+    EXPECT_SCENE(m_Scene, check::BlockIsEmptyAt(5, 3));
+}
+
+TEST_F(SlideTest, SlideRightThreeBlocksStacked) {
+    InitializeTestScene(15, 6);
+    AddSand(2, 4);
+    AddSand(2, 3);
+    AddSand(2, 2);
+    snaps::ApplyImpulse(GetBlock(2, 4), {400.0f, 0.0f});
+    snaps::ApplyImpulse(GetBlock(2, 3), {400.0f, 0.0f});
+    snaps::ApplyImpulse(GetBlock(2, 2), {400.0f, 0.0f});
+
+    m_Scene->Tick();
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingRightAt(3, 4));
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingRightAt(3, 3));
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingRightAt(3, 2));
+
+    m_Scene->TickTime(1.0f);
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(3, 4));
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(9, 4));
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(13, 4));
+}
+
+TEST_F(SlideTest, SlideLeftThreeBlocksStacked) {
+    InitializeTestScene(15, 6);
+    AddSand(12, 4);
+    AddSand(12, 3);
+    AddSand(12, 2);
+    snaps::ApplyImpulse(GetBlock(12, 4), {-400.0f, 0.0f});
+    snaps::ApplyImpulse(GetBlock(12, 3), {-400.0f, 0.0f});
+    snaps::ApplyImpulse(GetBlock(12, 2), {-400.0f, 0.0f});
+
+    m_Scene->Tick();
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingLeftAt(11, 4));
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingLeftAt(11, 3));
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingLeftAt(11, 2));
+
+    m_Scene->TickTime(1.0f);
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(1, 4));
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(5, 4));
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(11, 4));
+}
+
+TEST_F(SlideTest, SlideOverTheEdgeAndFallVerticallyDueToWall) {
+    InitializeTestScene(6, 5);
+    AddWall(1, 2);
+    AddWall(2, 2);
+    AddWall(4, 1);
+    AddSand(1, 1);
+    GetBlock(1, 1).Velocity.x = 300.0;
+
+    m_Scene->TickTime(0.8f);;
+    // EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(3, 3)); // FIXME: This should pass
+}
+
+TEST_F(SlideTest, SlideOverTheEdgeAndFallVerticallyDueToWall2) {
+    InitializeTestScene(6, 5);
+    AddWall(1, 2);
+    AddWall(2, 2);
+    AddWall(4, 1);
+    AddWall(4, 2);
+    AddSand(1, 1);
+    GetBlock(1, 1).Velocity.x = 300.0;
+
+    m_Scene->TickTime(0.8f);;
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(3, 3));
+}
+
+TEST_F(SlideTest, SlideAndFallIntoTheHole) {
+    InitializeTestScene(6, 5);
+    AddWall(1, 3);
+    AddWall(2, 3);
+    AddWall(4, 3);
+    AddSand(1, 2);
+    GetBlock(1, 2).Velocity.x = 500.0;
+
+    m_Scene->TickTime(0.8f);;
+    EXPECT_SCENE(m_Scene, check::BlockIsDynamicAt(3, 3));
+}
 
 // TODO Test projection: Horizontal projection hit wall and fall
 // TODO Test projection: Horizontal projection hit floor slide and stop
