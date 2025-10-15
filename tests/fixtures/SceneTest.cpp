@@ -5,12 +5,21 @@
 
 namespace {
 constexpr Color SAND_COLOR = { 194, 178, 128, 255 };
+constexpr Color STONE_COLOR = {128, 128, 128, 255};
 
 snaps::Block SandBlock(const int x, const int y) {
     return snaps::Block {
         .WorldPosition = {static_cast<float>(x), static_cast<float>(y)},
         .FillColor = SAND_COLOR,
         .IsDynamic = true
+    };
+}
+
+snaps::Block StoneBlock(const int x, const int y) {
+    return snaps::Block {
+        .WorldPosition = {static_cast<float>(x), static_cast<float>(y)},
+        .FillColor = STONE_COLOR,
+        .IsDynamic = false
     };
 }
 }
@@ -36,6 +45,11 @@ void SceneTest::TearDown() {
 void SceneTest::AddSand(const int x, const int y) const {
     auto& block = GetBlockOpt(x, y);
     block = SandBlock(x * snaps::BOX_SIZE, y * snaps::BOX_SIZE);
+}
+
+void SceneTest::AddWall(int x, int y) const {
+    auto& block = GetBlockOpt(x, y);
+    block = StoneBlock(x * snaps::BOX_SIZE, y * snaps::BOX_SIZE);
 }
 
 snaps::Block & SceneTest::GetBlock(const int x, const int y) const {

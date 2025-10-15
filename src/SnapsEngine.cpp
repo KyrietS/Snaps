@@ -12,7 +12,10 @@ namespace {
 bool TouchesFloor(const Grid& grid, const int x, const int y, const Block& block) {
     if (not grid.InBounds(x, y+1)) return true;
     const auto& below = grid[x, y+1];
-    return below.has_value() and (block.WorldPosition.y + BOX_SIZE >= below->WorldPosition.y) and below->Velocity.x == 0;
+    return below.has_value()
+        and (block.WorldPosition.y + BOX_SIZE >= below->WorldPosition.y)
+        and below->Velocity.x == 0
+        and block.Velocity.y >= 0;
 }
 }
 
@@ -30,9 +33,9 @@ void SnapsEngine::SimulatePhysics() {
             if (block.has_value() and block->IsDynamic) {
                 ApplyGravity(*block);
                 if (TouchesFloor(m_Grid, x, y, *block)) {
-                    ApplyFriction(*block);
+                    ApplyFriction(*block, 1.0f, m_DeltaTime);
                 } else {
-                    ApplyFriction(*block, 0.0f); // drag
+                    ApplyFriction(*block, 0.0f, m_DeltaTime); // drag
                 }
                 Integrate(*block);
             }
@@ -69,13 +72,13 @@ void SnapsEngine::Integrate(Block& block) {
         block.ForceAccum.y * block.InvMass
     };
 
-    block.Velocity += block.Acceleration * DeltaTime();
+    block.Velocity += block.Acceleration * m_DeltaTime;
 
-    // Realistically, any velocity smaller than 1.0/DeltaTime() will not move the object in a pixel space.
+    // Realistically, any velocity smaller than 1.0/DeltaTime will not move the object in a pixel space.
     if (std::abs(block.Velocity.x) < 0.01f) block.Velocity.x = 0.0f;
     if (std::abs(block.Velocity.y) < 0.01f) block.Velocity.y = 0.0f;
 
-    block.WorldPosition += block.Velocity * DeltaTime();
+    block.WorldPosition += block.Velocity * m_DeltaTime;
     block.ForceAccum = {0, 0};
 
     block.NeedsCollisionResolution = true;

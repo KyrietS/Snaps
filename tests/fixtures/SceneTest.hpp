@@ -8,6 +8,7 @@ struct SceneTest : ::testing::Test {
     void InitializeTestScene(int gridWidth, int gridHeight);
     void TearDown() override;
     void AddSand(int x, int y) const;
+    void AddWall(int x, int y) const;
     snaps::Block& GetBlock(int x, int y) const;
     std::optional<snaps::Block>& GetBlockOpt(int x, int y) const;
 

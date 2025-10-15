@@ -136,6 +136,9 @@ inline testing::Matcher<Vector2> Vector(const testing::Matcher<float>& x, const 
 inline auto BlockVelocityIsAt(const int gridX, const int gridY, const testing::Matcher<Vector2>& velocity) {
     return Block(gridX, gridY, Field("Velocity", &snaps::Block::Velocity, velocity));
 }
+inline auto BlockWorldPositionIsAt(const int gridX, const int gridY, const testing::Matcher<Vector2>& worldPosition) {
+    return Block(gridX, gridY, Field("WorldPosition", &snaps::Block::WorldPosition, worldPosition));
+}
 
 MATCHER_P2(Velocity, x, y, std::format("velocity ({}, {})", x, y)) {
     *result_listener << "velocity " << arg.Velocity;
@@ -153,12 +156,28 @@ inline auto BlockIsNotMovingAt(const int gridX, const int gridY) {
     return Block(gridX, gridY, IsNotMoving());
 }
 
+MATCHER(IsMovingUp, "") {
+    *result_listener << "velocity " << arg.Velocity;
+    return arg.Velocity.y < 0.0f;
+}
+inline auto BlockIsMovingUpAt(const int gridX, const int gridY) {
+    return Block(gridX, gridY, IsMovingUp());
+}
+
 MATCHER(IsMovingDown, "") {
     *result_listener << "velocity " << arg.Velocity;
     return arg.Velocity.y > 0.0f;
 }
 inline auto BlockIsMovingDownAt(const int gridX, const int gridY) {
     return Block(gridX, gridY, IsMovingDown());
+}
+
+MATCHER(IsMovingRight, "") {
+    *result_listener << "velocity " << arg.Velocity;
+    return arg.Velocity.x > 0.0f;
+}
+inline auto BlockIsMovingRightAt(const int gridX, const int gridY) {
+    return Block(gridX, gridY, IsMovingRight());
 }
 
 }

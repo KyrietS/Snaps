@@ -147,12 +147,82 @@ TEST_F(BasicSceneTest, BlockStoppedMidTileShouldBeAligned) {
     EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(finalPosX, finalPosY));
 }
 
-// TODO Test impulse: Impulse too weak to slide due to friction
-// TODO Test impulse: Impulse too weak to jump due to gravity
-// TODO Test impulse: Impulse too strong that exceeds max speed limit
-// TODO Test impulse: Impulse to the right when in mid-air
-// TODO Test impulse: Impulse angular
-// TODO Test impulse: Impulse stops block mid-tile
+struct ImpulseTest : SceneTest {};
+
+TEST_F(ImpulseTest, ImpulseTooWeakToSlideDueToFriction) {
+    InitializeTestScene(5, 5);
+    AddSand(2, 3);
+
+    snaps::ApplyImpulse(GetBlock(2, 3), {100.0f, 0.0f});
+
+    m_Scene->Tick();
+    EXPECT_SCENE(m_Scene, check::BlockIsXAlignedAt(2, 3));
+    EXPECT_SCENE(m_Scene, check::BlockIsNotMovingAt(2, 3));
+}
+
+TEST_F(ImpulseTest, ImpulseTooWeakToJumpDueToGravity) {
+    InitializeTestScene(5, 5);
+    AddSand(2, 3);
+
+    snaps::ApplyImpulse(GetBlock(2, 3), {0.0f, -100.0f});
+
+    m_Scene->Tick();
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(2, 3));
+    EXPECT_SCENE(m_Scene, check::BlockIsNotMovingAt(2, 3));
+}
+
+TEST_F(ImpulseTest, ImpulseTooStrongThatExceedsMaxSpeedLimit) {
+    InitializeTestScene(5, 5);
+    AddSand(1, 2);
+
+    const float maxSpeed = snaps::BOX_SIZE / m_Scene->GetDeltaTime();
+    const float maxImpulse = maxSpeed / GetBlock(1, 2).InvMass;
+    snaps::ApplyImpulse(GetBlock(1, 2), {maxImpulse + 10.0f, 0.0f});
+
+    EXPECT_SCENE(m_Scene, check::BlockIsDynamicAt(1, 2));
+    m_Scene->Tick();
+    EXPECT_SCENE(m_Scene, check::BlockIsEmptyAt(1, 2));
+    EXPECT_SCENE(m_Scene, check::BlockIsEmptyAt(2, 2));
+    EXPECT_SCENE(m_Scene, check::BlockIsDynamicAt(2, 3));
+
+    // FIXME: Generally the behavior of such fast moving blocks is currently undefined.
+    //        The engine should either clamp the velocity or apply sub-stepping.
+    //        This check should never pass because it means that block claims (2,3) but went past it.
+    // EXPECT_SCENE(m_Scene, check::BlockWorldPositionIsAt(2, 3, check::Vector(testing::Lt(2 * snaps::BOX_SIZE), testing::_)));
+}
+
+TEST_F(ImpulseTest, ImpulseToTheRightWhenInMidAir) {
+    InitializeTestScene(5, 5);
+    AddSand(2, 2);
+
+    snaps::ApplyImpulse(GetBlock(2, 2), {100.0f, 0.0f});
+
+    m_Scene->Tick(); // the block falls down and moves right
+    EXPECT_SCENE(m_Scene, check::BlockIsEmptyAt(2, 2));
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingDownAt(3, 3));
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingRightAt(3, 3));
+
+    m_Scene->TickTime(0.5); // block should eventually land on the ground
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(3, 3));
+    EXPECT_SCENE(m_Scene, check::BlockIsNotMovingAt(3, 3));
+}
+
+TEST_F(ImpulseTest, ImpulseAngular) {
+    InitializeTestScene(5, 5);
+    AddSand(1, 3);
+
+    auto& block = GetBlock(1, 3);
+    snaps::ApplyImpulse(block, {50.0f, -snaps::GRAVITY });
+
+    m_Scene->Tick(); // the block moves up and right
+    EXPECT_SCENE(m_Scene, check::BlockIsEmptyAt(1, 3));
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingUpAt(2, 2));
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingRightAt(2, 2));
+
+    m_Scene->TickTime(0.8f); // block should eventually land on the ground one tile to the right
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(2, 3));
+    EXPECT_SCENE(m_Scene, check::BlockIsNotMovingAt(2, 3));
+}
 
 // TODO Test slide: Slide and stop due to friction
 // TODO Test slide: Slide and stop due hit solid block

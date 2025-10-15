@@ -13,7 +13,7 @@ FetchContent_MakeAvailable(googletest)
 
 add_executable(SnapsTests
         Main.cpp
-        BasicTests.cpp
+        BasicSceneTests.cpp
         fixtures/SceneTest.cpp
         fixtures/SceneTest.hpp
         utils/TestGrid.cpp

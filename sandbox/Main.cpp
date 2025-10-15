@@ -194,7 +194,7 @@ int main() {
         BeginDrawing(); {
             ClearBackground(BLACK);
             HandleInput(grid);
-            engine.Step(snaps::DeltaTime());
+            engine.Step(1.0f / 60.0f);
             Draw(grid);
             DrawUi(grid);
             snaps::tick = false;
