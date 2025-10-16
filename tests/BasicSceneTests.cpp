@@ -497,14 +497,79 @@ TEST_F(ProjectionTest, AngularProjectionLeftHitCeilingAndFall) {
     EXPECT_SCENE(m_Scene, check::BlockIsMovingLeftAt(5, 2));
 }
 
-// TODO Test edge: Go over the edge going right and down
-// TODO Test edge: Go over the edge going left and down
-// TODO Test edge: Go over the edge going right and up
-// TODO Test edge: Go over the edge going left and up
-// TODO Test edge: Go under the edge going right and down
-// TODO Test edge: Go under the edge going left and down
-// TODO Test edge: Go under the edge going right and up
-// TODO Test edge: Go under the edge going left and up
+struct EdgeTest : SceneTest {
+    EdgeTest() {
+        InitializeTestScene(8, 8);
+        AddWall(3, 3);
+        AddWall(4, 3);
+        AddWall(3, 4);
+        AddWall(4, 4);
+    }
+};
+
+TEST_F(EdgeTest, GoOverTheEdgeGoingRightAndDown) {
+    AddSand(4, 1);
+    GetBlock(4, 1).Velocity.x = 10.0f;
+
+    m_Scene->TickTime(1.0f);
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(5, 6));
+}
+
+TEST_F(EdgeTest, GoOverTheEdgeGoingLeftAndDown) {
+    AddSand(3, 1);
+    GetBlock(3, 1).Velocity.x = -10.0f;
+
+    m_Scene->TickTime(1.0f);
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(2, 6));
+}
+
+TEST_F(EdgeTest, GoOverTheEdgeGoingRightAndUp) {
+    AddSand(1, 3);
+    GetBlock(1, 3).Velocity = {200.f, -100.0f};
+
+    m_Scene->TickTime(1.5f);
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(6, 6));
+}
+
+TEST_F(EdgeTest, GoOverTheEdgeGoingLeftAndUp) {
+    AddSand(6, 4);
+    GetBlock(6, 4).Velocity = {-150.f, -200.0f};
+
+    m_Scene->TickTime(1.5f);
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(1, 6));
+}
+
+TEST_F(EdgeTest, GoUnderTheEdgeGoingRightAndDown) {
+    AddSand(1, 4);
+    GetBlock(1, 4).Velocity = {200.f, 0.0f};
+
+    m_Scene->TickTime(1.0f);
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(6, 6));
+}
+
+TEST_F(EdgeTest, GoUnderTheEdgeGoingLeftAndDown) {
+    AddSand(6, 4);
+    GetBlock(6, 4).Velocity = {-200.f, 0.0f};
+
+    m_Scene->TickTime(1.0f);
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(1, 6));
+}
+
+TEST_F(EdgeTest, GoUnderTheEdgeGoingRightAndUp) {
+    AddSand(4, 6);
+    GetBlock(4, 6).Velocity = {50.f, -400.0f};
+
+    m_Scene->TickTime(1.5f);
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(6, 6));
+}
+
+TEST_F(EdgeTest, GoUnderTheEdgeGoingLeftAndUp) {
+    AddSand(3, 6);
+    GetBlock(3, 6).Velocity = {-50.f, -400.0f};
+
+    m_Scene->TickTime(1.5f);
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(1, 6));
+}
 
 // TODO Test collision of 2: Move 2 blocks horizontally from the opposite directions and stop due to collision
 // TODO Test collision of 2: Move 2 blocks horizontally in the same direction and stop due to collision (one block is slower)
