@@ -747,6 +747,7 @@ TEST_F(BoundaryTest, BlockStopsAtRightBoundary) {
     AddSand(2, 3);
     GetBlock(2, 3).Velocity.x = +400.0f;
 
+    // TODO: Disable gravity and check if block stops at the top
     m_Scene->TickTime(0.5f);
     // EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(4, 3)); // FIXME
     EXPECT_SCENE(m_Scene, check::BlockIsNotMovingAt(4, 3));
