@@ -655,11 +655,69 @@ TEST_F(CollisionTest, TryToMoveTwoBlocksTowardsEachOther) {
     EXPECT_SCENE(m_Scene, check::BlockIsNotMovingAt(3, 2));
 }
 
-// TODO Test friction: Greater mass means stronger friction
-// TODO Test friction: Slide when bottom block has no friction
-// TODO Test friction: Slide when upper block has no friction
-// TODO Test friction: Slide between blocks with different friction
-// TODO Test friction: No friction when 2 blocks are sliding on each other
+struct FrictionTest : SceneTest {};
+
+TEST_F(FrictionTest, GreaterMassGivesStrongerFriction) {
+    InitializeTestScene(10, 4);
+    AddSand(1, 2);
+    GetBlock(1, 2).InvMass = 1 / 1.0f;
+    GetBlock(1, 2).Velocity.x = 250.0f;
+
+    m_Scene->TickTime(1.0f);
+    ASSERT_SCENE(m_Scene, check::BlockIsAlignedAt(8, 2)); // goes to the end
+
+    AddSand(1, 2);
+    GetBlock(1, 2).InvMass = 1 / 2.0f; // 2 times greater mass
+    GetBlock(1, 2).Velocity.x = 250.0f;
+
+    m_Scene->TickTime(1.0f);
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(5, 2)); // stops earlier
+}
+
+TEST_F(FrictionTest, SlideWhenBottomBlockHasNoFriction) {
+    InitializeTestScene(10, 4);
+    for (int x = 0; x < 10; x++) {
+        GetBlock(x, 3).Friction = 0.0f; // no friction on bottom blocks
+    }
+    AddSand(1, 2);
+    GetBlock(1, 2).Friction = 0.5f;
+    GetBlock(1, 2).Velocity.x = 50.0f;
+
+    m_Scene->TickTime(1.0f);
+    // FIXME: friction value is not taken into account yet
+    // EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(6, 3)); // goes to the end
+}
+
+TEST_F(FrictionTest, SlideWhenUpperBlockHasNoFriction) {
+    InitializeTestScene(10, 4);
+    for (int x = 0; x < 10; x++) {
+        GetBlock(x, 3).Friction = 0.5f;
+    }
+    AddSand(1, 2);
+    GetBlock(1, 2).Friction = 0.0f;
+    GetBlock(1, 2).Velocity.x = 50.0f;
+
+    m_Scene->TickTime(1.0f);
+    // FIXME: friction value is not taken into account yet
+    // EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(6, 3)); // goes to the end
+}
+
+TEST_F(FrictionTest, NoFrictionWhenTwoBlocksAreSlidingOnEachOther) {
+    InitializeTestScene(10, 5);
+    for (int x = 0; x < 10; x++) {
+        GetBlock(x, 4).Friction = 0.0f; // no friction on bottom blocks
+    }
+    AddSand(1, 2);
+    AddSand(1, 3);
+    GetBlock(1, 2).Friction = 0.5f;
+    GetBlock(1, 3).Friction = 0.5f;
+    GetBlock(1, 2).Velocity.x = 200.0f;
+    GetBlock(1, 3).Velocity.x = 200.0f;
+
+    m_Scene->TickTime(1.0f);
+    // FIXME: friction value is not taken into account yet
+    // EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(6, 3)); // goes to the end
+}
 
 // TODO Test grid bounds: Block stops at bottom
 // TODO Test grid bounds: Block stops at top
