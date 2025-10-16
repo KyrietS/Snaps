@@ -571,11 +571,89 @@ TEST_F(EdgeTest, GoUnderTheEdgeGoingLeftAndUp) {
     EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(1, 6));
 }
 
-// TODO Test collision of 2: Move 2 blocks horizontally from the opposite directions and stop due to collision
-// TODO Test collision of 2: Move 2 blocks horizontally in the same direction and stop due to collision (one block is slower)
-// TODO Test collision of 2: Move 2 blocks vertically from the opposite directions and stop due to collision
-// TODO Test collision of 2: Move 2 blocks vertically in the same direction and stop due to collision
-// TODO Test collision of 2: Try to move 2 neighbor blocks towards each other
+struct CollisionTest : SceneTest {
+    CollisionTest() {
+        InitializeTestScene(8, 8);
+    }
+};
+
+TEST_F(CollisionTest, HorizontalCollisionWithTwoBlocksGoingOppositeWays) {
+    InitializeTestScene(10, 4);
+    AddSand(1, 2);
+    AddSand(8, 2);
+    GetBlock(1, 2).Velocity.x = 300.0f;
+    GetBlock(8, 2).Velocity.x = -300.0f;
+
+    m_Scene->TickTime(0.5f);
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(4, 2));
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(5, 2));
+}
+
+TEST_F(CollisionTest, HorizontalCollisionWithTwoBlocksGoingTheSameWay) {
+    InitializeTestScene(10, 4);
+    AddSand(1, 2);
+    AddSand(3, 2);
+    GetBlock(1, 2).Velocity.x = 400.0f;
+    GetBlock(3, 2).Velocity.x = 300.0f;
+
+    m_Scene->TickTime(0.5f);
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(5, 2));
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(8, 2));
+}
+
+TEST_F(CollisionTest, VerticalCollisionWithTwoBlocksGoingOppositeWays) {
+    InitializeTestScene(5, 10);
+    AddSand(2, 1);
+    AddSand(2, 8);
+    GetBlock(2, 1).Velocity.y = 300.0f;
+    GetBlock(2, 8).Velocity.y = -300.0f;
+
+    m_Scene->TickTime(1.0f);
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(2, 7));
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(2, 8));
+}
+
+TEST_F(CollisionTest, VerticalCollisionWithTwoBlocksGoingTheSameWay) {
+    InitializeTestScene(5, 10);
+    AddSand(2, 1);
+    AddSand(2, 3);
+    GetBlock(2, 1).Velocity.y = 100.0f;
+    GetBlock(2, 3).Velocity.y = 50.0f;
+
+    m_Scene->TickTime(0.75f);
+    EXPECT_SCENE(m_Scene, check::BlockIsEmptyAt(2, 7));
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(2, 8));
+
+    m_Scene->TickTime(0.5f);
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(2, 7));
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(2, 8));
+}
+
+TEST_F(CollisionTest, TwoOppositeBlocksMissEachOther) {
+    InitializeTestScene(5, 5);
+    AddSand(1, 2);
+    AddSand(3, 2);
+    GetBlock(1, 2).Velocity.x = 200.0f;
+    GetBlock(3, 2).Velocity.x = -200.0f;
+
+    m_Scene->TickTime(0.5f);
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(1, 3));
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(3, 3));
+}
+
+TEST_F(CollisionTest, TryToMoveTwoBlocksTowardsEachOther) {
+    InitializeTestScene(6, 4);
+    AddSand(2, 2);
+    AddSand(3, 2);
+    GetBlock(2, 2).Velocity.x = 200.0f;
+    GetBlock(3, 2).Velocity.x = -200.0f;
+
+    m_Scene->Tick();
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(2, 2));
+    EXPECT_SCENE(m_Scene, check::BlockIsNotMovingAt(2, 2));
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(3, 2));
+    EXPECT_SCENE(m_Scene, check::BlockIsNotMovingAt(3, 2));
+}
 
 // TODO Test friction: Greater mass means stronger friction
 // TODO Test friction: Slide when bottom block has no friction
