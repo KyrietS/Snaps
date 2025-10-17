@@ -229,7 +229,7 @@ void TestScenePreview::DrawFramePreview() {
         // Draw dynamic claims
         for (int gridX = 0; gridX < width; gridX++) {
             for (int gridY = 0; gridY < height; gridY++) {
-                const auto& block = grid[gridX, gridY];
+                const auto& block = grid.At(gridX, gridY);
                 if (block.has_value() and block->IsDynamic) {
                     const int x = gridX * snaps::BOX_SIZE;
                     const int y = gridY * snaps::BOX_SIZE;
@@ -414,7 +414,7 @@ static std::vector<std::pair<std::string, std::string> > GetInspectData(const st
 void TestScenePreview::ShowTileInspection() {
     if (not m_SelectedGridPosition) return;
 
-    const std::optional<snaps::Block>& block = GetSelectedGrid()[m_SelectedGridPosition->first, m_SelectedGridPosition->second];
+    const std::optional<snaps::Block>& block = GetSelectedGrid().At(m_SelectedGridPosition->first, m_SelectedGridPosition->second);
 
     const std::vector<std::pair<std::string, std::string> > inspectData = GetInspectData(block);
 

@@ -67,5 +67,5 @@ std::optional<snaps::Block>& SceneTest::GetBlockOpt(const int x, const int y) co
     assert(m_Grid);
     assert(x >= 0 and x < m_Grid->Width());
     assert(y >= 0 and y < m_Grid->Height());
-    return (*m_Grid)[x, y];
+    return m_Grid->At(x, y);
 }

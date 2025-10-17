@@ -44,7 +44,7 @@ struct Block : GridChecker {
     Block(const int gridX, const int gridY, const testing::Matcher<const snaps::Block&>& blockMatcher)
         : m_GridX(gridX), m_GridY(gridY), m_BlockMatcher(blockMatcher) {}
     CheckResult Check(const snaps::Grid& grid) const override {
-        const auto& block = grid[m_GridX, m_GridY];
+        const auto& block = grid.At(m_GridX, m_GridY);
         const bool matches = block and m_BlockMatcher.Matches(block.value());
 
         std::ostringstream matchSummary;
@@ -81,7 +81,7 @@ struct EmptyBlock : GridChecker
     EmptyBlock(const int gridX, const int gridY) : m_GridX(gridX), m_GridY(gridY) {}
     CheckResult Check(const snaps::Grid& grid) const override
     {
-        const auto& block = grid[m_GridX, m_GridY];
+        const auto& block = grid.At(m_GridX, m_GridY);
         const std::string summary = std::format("Expected block is empty at ({}, {})", m_GridX, m_GridY);
         if (not block) {
             return CheckResult::OkAt(m_GridX, m_GridY, summary);

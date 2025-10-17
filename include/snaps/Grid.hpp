@@ -16,14 +16,14 @@ public:
     }
 
     void Remove(const int x, const int y) {
-        (*this)[x, y] = std::nullopt;
+        At(x, y) = std::nullopt;
     }
 
-    std::optional<Block>& operator[](const int x, const int y) {
+    std::optional<Block>& At(const int x, const int y) {
         return m_Blocks[y * m_Width + x];
     }
 
-    const std::optional<Block>& operator[](const int x, const int y) const {
+    const std::optional<Block>& At(const int x, const int y) const {
         return m_Blocks[y * m_Width + x];
     }
 

@@ -11,13 +11,13 @@ snaps::Block CopyAtPos(snaps::Block block, int x, int y) {
 void AddBorder(snaps::Grid& grid, const snaps::Block& block) {
     // Top and bottom
     for (int x = 0; x < grid.Width(); x++) {
-        grid[x, 0] = CopyAtPos(block, x, 0);
-        grid[x, grid.Height() - 1] = CopyAtPos(block, x, grid.Height() - 1);
+        grid.At(x, 0) = CopyAtPos(block, x, 0);
+        grid.At(x, grid.Height() - 1) = CopyAtPos(block, x, grid.Height() - 1);
     }
     // Left and right
     for (int y = 0; y < grid.Height(); y++) {
-        grid[0, y] = CopyAtPos(block, 0, y);
-        grid[grid.Width() - 1, y] = CopyAtPos(block, grid.Width() - 1, y);
+        grid.At(0, y) = CopyAtPos(block, 0, y);
+        grid.At(grid.Width() - 1, y) = CopyAtPos(block, grid.Width() - 1, y);
     }
 }
 }

@@ -36,7 +36,7 @@ Block SandBlock(int x, int y) {
 }
 
 void SetStone(Grid& grid, int x, int y) {
-    grid[x, y] = StoneBlock(x, y);
+    grid.At(x, y) = StoneBlock(x, y);
 }
 
 void InitializeMap(Grid& grid) {
@@ -78,7 +78,7 @@ void DrawUi(const Grid& grid) {
     if (s_ShowClaims) {
         for (int y = 0; y < grid.Height(); y++) {
             for (int x = 0; x < grid.Width(); x++) {
-                const auto& block = grid[x, y];
+                const auto& block = grid.At(x, y);
                 if (block.has_value()) {
                     Color color = block->IsDynamic ? BLUE : RED;
                     DrawRectangleLines(x * BOX_SIZE, y * BOX_SIZE, BOX_SIZE, BOX_SIZE, color);
@@ -111,23 +111,23 @@ void HandleInput(Grid& grid) {
     DrawRectangleLines(worldPosX, worldPosY, BOX_SIZE, BOX_SIZE, SAND_COLOR);
 
     if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-        const auto& below = grid[gridPosX, gridPosY+1];
+        const auto& below = grid.At(gridPosX, gridPosY+1);
         if (below.has_value() and below->WorldPosition.y < (gridPosY+1) * BOX_SIZE) return;
-        grid[gridPosX, gridPosY] = Block {
+        grid.At(gridPosX, gridPosY) = Block {
             .WorldPosition = {static_cast<float>(worldPosX), static_cast<float>(worldPosY)},
             .FillColor = SAND_COLOR,
             .IsDynamic = true
         };
     }
     if (IsMouseButtonDown(MOUSE_BUTTON_MIDDLE)) {
-        grid[gridPosX, gridPosY] = Block {
+        grid.At(gridPosX, gridPosY) = Block {
             .WorldPosition = {static_cast<float>(worldPosX), static_cast<float>(worldPosY)},
             .FillColor = STONE_COLOR,
             .IsDynamic = false
         };
     }
     if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
-        grid[gridPosX, gridPosY] = std::nullopt;
+        grid.At(gridPosX, gridPosY) = std::nullopt;
     }
 
     if (IsKeyReleased(KEY_UP)) {

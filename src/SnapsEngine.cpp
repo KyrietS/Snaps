@@ -11,7 +11,7 @@ namespace snaps {
 namespace {
 bool TouchesFloor(const Grid& grid, const int x, const int y, const Block& block) {
     if (not grid.InBounds(x, y+1)) return true;
-    const auto& below = grid[x, y+1];
+    const auto& below = grid.At(x, y+1);
     return below.has_value()
         and (block.WorldPosition.y + BOX_SIZE >= below->WorldPosition.y)
         and below->Velocity.x == 0
@@ -29,7 +29,7 @@ void SnapsEngine::Step(float deltaTime) {
 void SnapsEngine::SimulatePhysics() {
     for (int y = 0; y < m_Grid.Height(); y++) {
         for (int x = 0; x < m_Grid.Width(); x++) {
-            auto& block = m_Grid[x, y];
+            auto& block = m_Grid.At(x, y);
             if (block.has_value() and block->IsDynamic) {
                 ApplyGravity(*block);
                 if (TouchesFloor(m_Grid, x, y, *block)) {
@@ -85,7 +85,7 @@ void SnapsEngine::Integrate(Block& block) {
 }
 
 void SnapsEngine::SolveGridPhysics(int x, int y) {
-    auto& block = m_Grid[x, y];
+    auto& block = m_Grid.At(x, y);
     if (not block.has_value() or not block->IsDynamic or not block->NeedsCollisionResolution) return;
 
     if (block->Velocity.x >= 0)
@@ -95,7 +95,7 @@ void SnapsEngine::SolveGridPhysics(int x, int y) {
 
     if (x == -999) return; // will continue in second pass
 
-    auto& movedBlock = m_Grid[x, y].value();
+    auto& movedBlock = m_Grid.At(x, y).value();
 
     if (movedBlock.Velocity.y >= 0)
         SolveMovementDown(x, y, movedBlock);
@@ -120,7 +120,7 @@ void SnapsEngine::SolveMovementLeft(int& x, int& y, Block& block) {
     }
 
     const int desiredXGrid = static_cast<int>(block.WorldPosition.x) / BOX_SIZE;
-    auto& blockLeft = m_Grid[x - 1, y];
+    auto& blockLeft = m_Grid.At(x - 1, y);
     const bool wantsToMoveLeft = desiredXGrid < x and block.Velocity.x < 0;
     const float deceleration = block.Acceleration.x > 0 ? block.Acceleration.x : 0.0f;
 
@@ -161,7 +161,7 @@ void SnapsEngine::SolveMovementRight(int& x, int& y, Block& block) {
     }
 
     const int desiredXGrid = static_cast<int>(block.WorldPosition.x + BOX_SIZE) / BOX_SIZE;
-    auto& blockRight = m_Grid[x + 1, y];
+    auto& blockRight = m_Grid.At(x + 1, y);
     const bool wantsToMoveRight = desiredXGrid > x and block.Velocity.x > 0;
     const float deceleration = block.Acceleration.x < 0 ? -block.Acceleration.x : 0.0f;
 
@@ -216,7 +216,7 @@ void SnapsEngine::SolveMovementDown(int& x, int& y, Block& block) {
     }
 
     const int desiredYGrid = static_cast<int>(block.WorldPosition.y + BOX_SIZE) / BOX_SIZE;
-    auto& blockBelow = m_Grid[x, y+1];
+    auto& blockBelow = m_Grid.At(x, y+1);
     const bool wantsToMoveDown = desiredYGrid > y;
 
     // Desired grid is occupied. Stop.
@@ -254,7 +254,7 @@ void SnapsEngine::SolveMovementUp(int& x, int& y, Block& block) {
     }
 
     const int desiredYGrid = static_cast<int>(block.WorldPosition.y) / BOX_SIZE;
-    auto& blockAbove = m_Grid[x, y - 1];
+    auto& blockAbove = m_Grid.At(x, y - 1);
     const bool wantsToMoveUp = desiredYGrid < y;
 
     // Desired grid is occupied. Stop.
