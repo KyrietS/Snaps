@@ -271,7 +271,7 @@ void SnapsEngine::SolveMovementUp(int& x, int& y, Block& block) {
     // [DECELERATION ONLY]
     // Desired grid is free. Claim it if we have enough velocity to reach it.
     if (wantsToMoveUp and not blockAbove.has_value()) {
-        const float minVelocityToReachNextGrid = std::sqrt(2.0f * m_Gravity * BLOCK_SIZE);
+        const float minVelocityToReachNextGrid = std::sqrt(2.0f * m_Config.Gravity * BLOCK_SIZE);
         // More accurate check if next grid is reachable
         // const float distanceToReachNextGrid = block.WorldPosition.y - desiredYGrid * BOX_SIZE;
         // const float minVelocityToReachNextGrid = std::sqrt(2.0f * GRAVITY * distanceToReachNextGrid);
@@ -289,7 +289,7 @@ void SnapsEngine::SolveMovementUp(int& x, int& y, Block& block) {
 }
 
 void SnapsEngine::ApplyGravity(Block& block) {
-    block.ForceAccum += Vector2{0.0f, m_Gravity} * block.GravityScale / block.InvMass;
+    block.ForceAccum += Vector2{0.0f, m_Config.Gravity} * block.GravityScale / block.InvMass;
 }
 
 void SnapsEngine::ApplyFriction(Block& block, float multiplier) {

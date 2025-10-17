@@ -4,14 +4,19 @@
 
 
 namespace snaps {
+
+struct Config {
+    float Gravity = 200.0f;
+    float Drag = 0.0f; // For now
+};
+
 class SnapsEngine {
 public:
     explicit SnapsEngine(Grid& grid);
 
     void Step(float deltaTime);
 
-    void SetGravity(const float gravity) { m_Gravity = gravity; }
-    float GetGravity() const { return m_Gravity; }
+    Config& GetConfig() { return m_Config; }
 
 private:
     void SimulatePhysics();
@@ -33,7 +38,7 @@ private:
         int y;
     };
 
-    float m_Gravity = 200.0f;
+    Config m_Config;
     float m_DeltaTime = 0.0f;
     bool m_SecondPass = false;
     std::stack<SecondPassContact> m_RightMovementContacts;
