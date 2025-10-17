@@ -6,13 +6,12 @@
 #include "GlobalConfiguration.hpp"
 
 namespace {
-
-std::optional<std::string> GetEnvironmentVar(const std::string_view varName) {
-    const char* value = std::getenv(varName.data());
+std::optional<std::string> GetEnvironmentVar(const std::string& varName) {
+    const char* value = std::getenv(varName.c_str());
     return value ? std::make_optional(std::string(value)) : std::nullopt;
 }
 
-bool IsEnvFlagEnabled(const std::string_view varName) {
+bool IsEnvFlagEnabled(const std::string& varName) {
     return GetEnvironmentVar(varName).and_then([](const std::string& value) {
         return std::make_optional(value != "0");
     }).value_or(false);

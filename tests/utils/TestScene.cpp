@@ -6,7 +6,8 @@
 
 TestScene::TestScene(snaps::SnapsEngine& engine, snaps::Grid& grid)
     : m_Engine(engine)
-    , m_Grid(grid) {}
+      , m_Grid(grid) {
+}
 
 void TestScene::Tick() {
     TickN(1);
@@ -46,7 +47,7 @@ void TestScene::AddCheck(const check::GridChecker& checker, const char* file, co
 }
 
 bool TestScene::HasAnyFailedChecks() const {
-    for (const auto &results: m_CheckResults | std::views::values) {
+    for (const auto& results: m_CheckResults | std::views::values) {
         if (std::ranges::any_of(results, [](const auto& result) { return not result.Success; })) {
             return true;
         }
@@ -55,8 +56,8 @@ bool TestScene::HasAnyFailedChecks() const {
     return false;
 }
 
-void TestScene::SetDeltaTime(const float dt) {
-    m_DeltaTime = dt;
+void TestScene::SetDeltaTime(const float newDeltaTime) {
+    m_DeltaTime = newDeltaTime;
 }
 
 float TestScene::GetDeltaTime() const {

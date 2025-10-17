@@ -1,7 +1,6 @@
 #include "TestGrid.hpp"
 
 namespace {
-
 constexpr Color STONE_COLOR = {128, 128, 128, 255};
 
 snaps::Block CopyAtPos(snaps::Block block, int x, int y) {
@@ -9,7 +8,7 @@ snaps::Block CopyAtPos(snaps::Block block, int x, int y) {
     return block;
 }
 
-void AddBorder(snaps::Grid& grid, snaps::Block block) {
+void AddBorder(snaps::Grid& grid, const snaps::Block& block) {
     // Top and bottom
     for (int x = 0; x < grid.Width(); x++) {
         grid[x, 0] = CopyAtPos(block, x, 0);
@@ -23,9 +22,9 @@ void AddBorder(snaps::Grid& grid, snaps::Block block) {
 }
 }
 
-snaps::Grid MakeTestGrid(int width, int height) {
+snaps::Grid MakeTestGrid(const int width, const int height) {
     snaps::Grid grid(width, height);
-    snaps::Block block {
+    snaps::Block block{
         .FillColor = STONE_COLOR,
         .IsDynamic = false
     };

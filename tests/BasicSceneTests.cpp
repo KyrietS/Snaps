@@ -44,7 +44,7 @@ TEST_F(BasicSceneTest, SpawnOnTheGround) {
 
 TEST_F(BasicSceneTest, FreeFallNextToEachOther) {
     InitializeTestScene(5, 5);
-    AddSand(1,1);
+    AddSand(1, 1);
     AddSand(2, 1);
     AddSand(3, 1);
 
@@ -63,7 +63,7 @@ TEST_F(BasicSceneTest, FreeFallNextToEachOther) {
     EXPECT_SCENE(m_Scene, check::BlockIsDynamicAt(2, 2));
     EXPECT_SCENE(m_Scene, check::BlockIsDynamicAt(3, 2));
 
-    m_Scene->TickTime(0.7);
+    m_Scene->TickTime(0.7f);
     EXPECT_SCENE(m_Scene, check::BlockIsDynamicAt(1, 3));
     EXPECT_SCENE(m_Scene, check::BlockIsDynamicAt(2, 3));
     EXPECT_SCENE(m_Scene, check::BlockIsDynamicAt(3, 3));
@@ -120,7 +120,7 @@ TEST_F(BasicSceneTest, FreeFallOnTopOfEachOther) {
 TEST_F(BasicSceneTest, BlockSpawnedMidTileShouldBeAligned) {
     InitializeTestScene(5, 5);
     AddSand(2, 3); // spawn on ground
-    GetBlock(2, 3).WorldPosition.x += snaps::BOX_SIZE / 2; // move right mid-tile
+    GetBlock(2, 3).WorldPosition.x += snaps::BOX_SIZE / 2.0f; // move right mid-tile
 
     EXPECT_SCENE(m_Scene, check::Not(check::BlockIsAlignedAt(2, 3)));
     m_Scene->Tick();
@@ -143,7 +143,7 @@ TEST_F(BasicSceneTest, BlockStoppedMidTileShouldBeAligned) {
     EXPECT_SCENE(m_Scene, check::BlockIsXAlignedAt(finalPosX, finalPosY)); // X aligned, Y not aligned (yet)
     EXPECT_SCENE(m_Scene, check::Not(check::BlockIsAlignedAt(finalPosX, finalPosY)));
 
-    m_Scene->TickTime(0.2); // total alignment (snapping to grid) should happen during this time
+    m_Scene->TickTime(0.2f); // total alignment (snapping to grid) should happen during this time
     EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(finalPosX, finalPosY));
 }
 
@@ -212,7 +212,7 @@ TEST_F(ImpulseTest, ImpulseAngular) {
     AddSand(1, 3);
 
     auto& block = GetBlock(1, 3);
-    snaps::ApplyImpulse(block, {50.0f, -snaps::GRAVITY });
+    snaps::ApplyImpulse(block, {50.0f, -snaps::GRAVITY});
 
     m_Scene->Tick(); // the block moves up and right
     EXPECT_SCENE(m_Scene, check::BlockIsEmptyAt(1, 3));
@@ -244,7 +244,7 @@ TEST_F(SlideTest, SlideAndStopDueToFriction) {
     snaps::ApplyImpulse(GetBlock(2, 3), {400.0f, 0.0f});
 
     EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(2, 3));
-    m_Scene->TickTime(0.7);
+    m_Scene->TickTime(0.7f);
     EXPECT_SCENE(m_Scene, check::BlockIsEmptyAt(2, 3));
     EXPECT_SCENE(m_Scene, check::BlockIsDynamicAt(5, 3));
     EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(5, 3));
@@ -259,7 +259,7 @@ TEST_F(SlideTest, SlideAndStopDueToHitWithSolidWall) {
     GetBlock(2, 3).Velocity.x = 500.0f;
 
     EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(2, 3));
-    m_Scene->TickTime(0.7);
+    m_Scene->TickTime(0.7f);
     EXPECT_SCENE(m_Scene, check::BlockIsEmptyAt(3, 3));
     EXPECT_SCENE(m_Scene, check::BlockIsDynamicAt(4, 3));
     EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(4, 3));
@@ -274,7 +274,7 @@ TEST_F(SlideTest, SlideAndStopDueToHitWithDynamicWall) {
     GetBlock(2, 3).Velocity.x = 500.0f;
 
     EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(2, 3));
-    m_Scene->TickTime(0.7);
+    m_Scene->TickTime(0.7f);
     EXPECT_SCENE(m_Scene, check::BlockIsEmptyAt(3, 3));
     EXPECT_SCENE(m_Scene, check::BlockIsDynamicAt(4, 3));
     EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(4, 3));
@@ -301,7 +301,7 @@ TEST_F(SlideTest, SlideRightThreeBlocksNextToEachOther) {
     EXPECT_SCENE(m_Scene, check::BlockIsMovingRightAt(4, 3));
     EXPECT_SCENE(m_Scene, check::BlockIsMovingRightAt(5, 3));
 
-    m_Scene->TickTime(0.7);
+    m_Scene->TickTime(0.7f);
     EXPECT_SCENE(m_Scene, check::BlockIsEmptyAt(4, 3));
     EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(5, 3));
     EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(6, 3));
@@ -326,7 +326,7 @@ TEST_F(SlideTest, SlideLeftThreeBlocksNextToEachOther) {
     EXPECT_SCENE(m_Scene, check::BlockIsMovingLeftAt(6, 3));
     EXPECT_SCENE(m_Scene, check::BlockIsMovingLeftAt(5, 3));
     EXPECT_SCENE(m_Scene, check::BlockIsMovingLeftAt(4, 3));
-    m_Scene->TickTime(0.7);
+    m_Scene->TickTime(0.7f);
     EXPECT_SCENE(m_Scene, check::BlockIsEmptyAt(1, 3));
     EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(2, 3));
     EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(3, 3));
@@ -382,7 +382,7 @@ TEST_F(SlideTest, SlideOverTheEdgeAndFallVerticallyDueToWall) {
     AddSand(1, 1);
     GetBlock(1, 1).Velocity.x = 300.0;
 
-    m_Scene->TickTime(0.8f);;
+    m_Scene->TickTime(0.8f);
     // EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(3, 3)); // FIXME: This should pass
 }
 
@@ -395,7 +395,7 @@ TEST_F(SlideTest, SlideOverTheEdgeAndFallVerticallyDueToWall2) {
     AddSand(1, 1);
     GetBlock(1, 1).Velocity.x = 300.0;
 
-    m_Scene->TickTime(0.8f);;
+    m_Scene->TickTime(0.8f);
     EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(3, 3));
 }
 
@@ -407,7 +407,7 @@ TEST_F(SlideTest, SlideAndFallIntoTheHole) {
     AddSand(1, 2);
     GetBlock(1, 2).Velocity.x = 500.0;
 
-    m_Scene->TickTime(0.8f);;
+    m_Scene->TickTime(0.8f);
     EXPECT_SCENE(m_Scene, check::BlockIsDynamicAt(3, 3));
 }
 
@@ -722,7 +722,7 @@ TEST_F(FrictionTest, NoFrictionWhenTwoBlocksAreSlidingOnEachOther) {
 struct BoundaryTest : SceneTest {
     BoundaryTest() {
         InitializeTestScene(5, 5);
-        for (auto& block : m_Grid->Blocks()) {
+        for (auto& block: m_Grid->Blocks()) {
             block.reset();
         }
     }

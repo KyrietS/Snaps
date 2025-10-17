@@ -15,11 +15,14 @@ std::pair<int, int> ToWindowCoordinates(const snaps::Block& block) {
     return {static_cast<int>(block.WorldPosition.x), static_cast<int>(block.WorldPosition.y)};
 }
 
-void DrawRect(const int gridScreenX, const int gridScreenY, const int gridScreenWidth, const int gridScreenHeight, const Color color) {
+void DrawRect(const int gridScreenX, const int gridScreenY, const int gridScreenWidth, const int gridScreenHeight,
+              const Color color) {
     DrawLine(gridScreenX, gridScreenY, gridScreenX + gridScreenWidth, gridScreenY, color);
-    DrawLine(gridScreenX, gridScreenY + gridScreenHeight, gridScreenX + gridScreenWidth, gridScreenY + gridScreenHeight, color);
+    DrawLine(gridScreenX, gridScreenY + gridScreenHeight, gridScreenX + gridScreenWidth, gridScreenY + gridScreenHeight,
+             color);
     DrawLine(gridScreenX, gridScreenY, gridScreenX, gridScreenY + gridScreenHeight, color);
-    DrawLine(gridScreenX + gridScreenWidth, gridScreenY, gridScreenX + gridScreenWidth, gridScreenY + gridScreenHeight, color);
+    DrawLine(gridScreenX + gridScreenWidth, gridScreenY, gridScreenX + gridScreenWidth, gridScreenY + gridScreenHeight,
+             color);
 }
 
 void DrawPixelGrid(const int gridWidth, const int gridHeight, const Color color) {
@@ -31,7 +34,7 @@ void DrawPixelGrid(const int gridWidth, const int gridHeight, const Color color)
     }
 }
 
-void GuiDrawTextWithBg(const char *text, Rectangle textBounds, int alignment, Color tint) {
+void GuiDrawTextWithBg(const char* text, Rectangle textBounds, int alignment, Color tint) {
     const int textSizeX = GuiGetTextWidth(text);
     const int textSizeY = GuiGetFont().baseSize;
     constexpr Color textBackground = {0, 0, 0, 100};
@@ -42,16 +45,18 @@ void GuiDrawTextWithBg(const char *text, Rectangle textBounds, int alignment, Co
     else if (alignment == TEXT_ALIGN_RIGHT)
         textBgX = textBounds.x + textBounds.width - static_cast<float>(textSizeX);
 
-    const Rectangle textBackgroundRec = {textBgX - 2, textBounds.y - 2, static_cast<float>(textSizeX) + 4, static_cast<float>(textSizeY)};
+    const Rectangle textBackgroundRec = {
+        textBgX - 2, textBounds.y - 2, static_cast<float>(textSizeX) + 4, static_cast<float>(textSizeY)
+    };
     DrawRectangleRec(textBackgroundRec, textBackground);
     GuiDrawText(text, textBounds, alignment, tint);
 }
 }
 
-TestScenePreview::TestScenePreview(const TestScene &scene, std::string  title)
+TestScenePreview::TestScenePreview(const TestScene& scene, std::string title)
     : m_Scene(scene)
-    , m_Title(std::move(title))
-    , m_SelectedFrameIndex(static_cast<int>(m_Scene.GetGridHistory().size())) {
+      , m_Title(std::move(title))
+      , m_SelectedFrameIndex(static_cast<int>(m_Scene.GetGridHistory().size())) {
     assert(AreAllGridsSameSize() && "Scenes with different grid sizes are not supported");
 }
 
@@ -72,8 +77,7 @@ void TestScenePreview::Show() {
     while (!WindowShouldClose()) // Detect window close button or ESC key
     {
         HandleInput();
-        BeginDrawing();
-        {
+        BeginDrawing(); {
             ClearBackground(BLACK);
             ShowFramePreview();
             ShowFramePaginationBar();
@@ -140,7 +144,7 @@ void TestScenePreview::ShowFramePaginationBar() {
         auto color = GRAY;
         if (i == m_SelectedFrameIndex) {
             color = YELLOW;
-        }else if (HasAnyFailedChecks(i)) {
+        } else if (HasAnyFailedChecks(i)) {
             color = RED;
         } else if (HasAnyOkChecks(i)) {
             color = GREEN;
@@ -182,10 +186,10 @@ void TestScenePreview::DrawFramePreview() {
     const int gridHeight = height * snaps::BOX_SIZE;
 
     if (camera.zoom > 4.0f) {
-        DrawPixelGrid(gridWidth, gridHeight, Color(40, 40, 40, 255));
+        DrawPixelGrid(gridWidth, gridHeight, Color{40, 40, 40, 255});
     }
 
-    for (const auto& block : grid.Blocks()) {
+    for (const auto& block: grid.Blocks()) {
         if (block.has_value()) {
             auto [x, y] = ToWindowCoordinates(*block);
             DrawRectangle(x, y, snaps::BOX_SIZE, snaps::BOX_SIZE, block->FillColor);
@@ -194,29 +198,29 @@ void TestScenePreview::DrawFramePreview() {
 
     if (m_ShowDiagnostics) {
         // Draw failed checks
-        std::set<std::pair<int, int>> markedPositions;
-        for (const auto& result : m_Scene.GetCheckResults().at(m_SelectedFrameIndex)) {
+        std::set<std::pair<int, int> > markedPositions;
+        for (const auto& result: m_Scene.GetCheckResults().at(m_SelectedFrameIndex)) {
             if (not result.Success) {
-                for (const auto& [gridX, gridY] : result.Positions) {
+                for (const auto& [gridX, gridY]: result.Positions) {
                     if (grid.InBounds(gridX, gridY) and not markedPositions.contains({gridX, gridY})) {
                         markedPositions.emplace(gridX, gridY);
                         const int x = gridX * snaps::BOX_SIZE;
                         const int y = gridY * snaps::BOX_SIZE;
-                        DrawRectangle(x, y, snaps::BOX_SIZE, snaps::BOX_SIZE, Color(255, 0, 0, 50));
+                        DrawRectangle(x, y, snaps::BOX_SIZE, snaps::BOX_SIZE, Color{255, 0, 0, 50});
                     }
                 }
             }
         }
 
         // Draw ok checks
-        for (const auto& result : m_Scene.GetCheckResults().at(m_SelectedFrameIndex)) {
+        for (const auto& result: m_Scene.GetCheckResults().at(m_SelectedFrameIndex)) {
             if (result.Success) {
-                for (const auto& [gridX, gridY] : result.Positions) {
+                for (const auto& [gridX, gridY]: result.Positions) {
                     if (grid.InBounds(gridX, gridY) and not markedPositions.contains({gridX, gridY})) {
                         markedPositions.emplace(gridX, gridY);
                         const int x = gridX * snaps::BOX_SIZE;
                         const int y = gridY * snaps::BOX_SIZE;
-                        DrawRectangle(x, y, snaps::BOX_SIZE, snaps::BOX_SIZE, Color(0, 255, 0, 50));
+                        DrawRectangle(x, y, snaps::BOX_SIZE, snaps::BOX_SIZE, Color{0, 255, 0, 50});
                     }
                 }
             }
@@ -246,7 +250,7 @@ void TestScenePreview::DrawFramePreview() {
     if (m_SelectedGridPosition.has_value()) {
         const int x = m_SelectedGridPosition->first * snaps::BOX_SIZE;
         const int y = m_SelectedGridPosition->second * snaps::BOX_SIZE;
-        DrawRectangle(x, y, snaps::BOX_SIZE, snaps::BOX_SIZE, Color(255, 255, 0, 70));
+        DrawRectangle(x, y, snaps::BOX_SIZE, snaps::BOX_SIZE, Color{255, 255, 0, 70});
     }
 
     // Draw grid outline (don't use DrawRectangleLines because corner is broken)
@@ -273,10 +277,10 @@ Camera2D TestScenePreview::GetPreviewCamera() const {
 }
 
 float TestScenePreview::GetZoomLevel() const {
-    return m_ZoomLevelIndex == 0 ? 1.0f : std::pow( 2.0f, static_cast<float>(m_ZoomLevelIndex) + 1);
+    return m_ZoomLevelIndex == 0 ? 1.0f : std::pow(2.0f, static_cast<float>(m_ZoomLevelIndex) + 1);
 }
 
-const snaps::Grid & TestScenePreview::GetSelectedGrid() const {
+const snaps::Grid& TestScenePreview::GetSelectedGrid() const {
     if (m_SelectedFrameIndex == m_Scene.GetGridHistory().size()) return m_Scene.GetCurrentGrid();
     return m_Scene.GetGridHistory().at(m_SelectedFrameIndex);
 }
@@ -384,7 +388,7 @@ void TestScenePreview::ShowReplayButtons() {
     GuiDrawTextWithBg(TextFormat("%.3f s", timeSinceStartInMs), textRect, TEXT_ALIGN_CENTER, WHITE);
 }
 
-static std::vector<std::pair<std::string, std::string>> GetInspectData(const std::optional<snaps::Block>& block) {
+static std::vector<std::pair<std::string, std::string> > GetInspectData(const std::optional<snaps::Block>& block) {
     if (not block.has_value()) return {std::make_pair("Empty", "")};
 
     auto formatFloat = [](const float value) {
@@ -397,7 +401,7 @@ static std::vector<std::pair<std::string, std::string>> GetInspectData(const std
         return std::format("({:.1f}, {:.1f})", vec.x, vec.y);
     };
 
-    std::vector<std::pair<std::string, std::string>> result;
+    std::vector<std::pair<std::string, std::string> > result;
     result.emplace_back("WorldPosition", formatVector(block->WorldPosition));
     result.emplace_back("Velocity", formatVector(block->Velocity));
     result.emplace_back("IsDynamic", formatBool(block->IsDynamic));
@@ -412,7 +416,7 @@ void TestScenePreview::ShowTileInspection() {
 
     const std::optional<snaps::Block>& block = GetSelectedGrid()[m_SelectedGridPosition->first, m_SelectedGridPosition->second];
 
-    const std::vector<std::pair<std::string, std::string>> inspectData = GetInspectData(block);
+    const std::vector<std::pair<std::string, std::string> > inspectData = GetInspectData(block);
 
     Rectangle inspectPanelRect = {
         .x = 10,
@@ -425,9 +429,11 @@ void TestScenePreview::ShowTileInspection() {
         m_SelectedGridPosition = std::nullopt;
     }
     Rectangle labelRect = {
-        inspectPanelRect.x + 5, inspectPanelRect.y + 30, inspectPanelRect.width * 0.5f - 5, 10};
+        inspectPanelRect.x + 5, inspectPanelRect.y + 30, inspectPanelRect.width * 0.5f - 5, 10
+    };
     Rectangle valueRect = {
-        inspectPanelRect.x + 5 + labelRect.width, inspectPanelRect.y + 30, inspectPanelRect.width * 0.5f - 5, 10};
+        inspectPanelRect.x + 5 + labelRect.width, inspectPanelRect.y + 30, inspectPanelRect.width * 0.5f - 5, 10
+    };
 
     auto drawInspectText = [&](const char* label, const char* value) {
         GuiDrawText(label, labelRect, TEXT_ALIGN_LEFT, LIGHTGRAY);
@@ -436,21 +442,22 @@ void TestScenePreview::ShowTileInspection() {
         valueRect.y += 15;
     };
 
-    for (const auto& [label, value] : inspectData) {
+    for (const auto& [label, value]: inspectData) {
         drawInspectText(label.c_str(), value.c_str());
     }
 
-    Color selectedTileColor {0, 0, 255, 255};
+    Color selectedTileColor{0, 0, 255, 255};
     if (block.has_value()) {
         const Camera2D camera = GetPreviewCamera();
         BeginMode2D(camera);
-        DrawRect(static_cast<int>(block->WorldPosition.x), static_cast<int>(block->WorldPosition.y), snaps::BOX_SIZE, snaps::BOX_SIZE, selectedTileColor);
+        DrawRect(static_cast<int>(block->WorldPosition.x), static_cast<int>(block->WorldPosition.y), snaps::BOX_SIZE, snaps::BOX_SIZE,
+                 selectedTileColor);
         EndMode2D();
     }
 
     auto checkResults = m_Scene.GetCheckResults().at(m_SelectedFrameIndex);
 
-    for (const auto& result : checkResults) {
+    for (const auto& result: checkResults) {
         if (m_SelectedGridPosition and result.Positions.contains({m_SelectedGridPosition->first, m_SelectedGridPosition->second})) {
             const Rectangle resultRec = {
                 .x = 10,
@@ -458,7 +465,7 @@ void TestScenePreview::ShowTileInspection() {
                 .width = static_cast<float>(GetScreenWidth()) - 20,
                 .height = 10
             };
-            const Color resultColor = result.Success ? Color(54, 247, 90, 255) : Color(255, 122, 122, 255);
+            const Color resultColor = result.Success ? Color{54, 247, 90, 255} : Color{255, 122, 122, 255};
             const GuiIconName resultIcon = result.Success ? ICON_OK_TICK : ICON_CROSS;
             const char* text = GuiIconText(resultIcon, result.Summary.c_str());
             GuiDrawTextWithBg(text, resultRec, TEXT_ALIGN_LEFT, resultColor);
