@@ -120,7 +120,7 @@ TEST_F(BasicSceneTest, FreeFallOnTopOfEachOther) {
 TEST_F(BasicSceneTest, BlockSpawnedMidTileShouldBeAligned) {
     InitializeTestScene(5, 5);
     AddSand(2, 3); // spawn on ground
-    GetBlock(2, 3).WorldPosition.x += snaps::BOX_SIZE / 2.0f; // move right mid-tile
+    GetBlock(2, 3).WorldPosition.x += snaps::BLOCK_SIZE / 2.0f; // move right mid-tile
 
     EXPECT_SCENE(m_Scene, check::Not(check::BlockIsAlignedAt(2, 3)));
     m_Scene->Tick();
@@ -130,7 +130,7 @@ TEST_F(BasicSceneTest, BlockSpawnedMidTileShouldBeAligned) {
 TEST_F(BasicSceneTest, BlockStoppedMidTileShouldBeAligned) {
     InitializeTestScene(5, 5);
     AddSand(1, 1);
-    GetBlock(1, 1).Velocity.x = snaps::BOX_SIZE;
+    GetBlock(1, 1).Velocity.x = snaps::BLOCK_SIZE;
 
     m_Scene->TickTime(0.5);
 
@@ -175,7 +175,7 @@ TEST_F(ImpulseTest, ImpulseTooStrongThatExceedsMaxSpeedLimit) {
     InitializeTestScene(5, 5);
     AddSand(1, 2);
 
-    const float maxSpeed = snaps::BOX_SIZE / m_Scene->GetDeltaTime();
+    const float maxSpeed = snaps::BLOCK_SIZE / m_Scene->GetDeltaTime();
     const float maxImpulse = maxSpeed / GetBlock(1, 2).InvMass;
     snaps::ApplyImpulse(GetBlock(1, 2), {maxImpulse + 10.0f, 0.0f});
 

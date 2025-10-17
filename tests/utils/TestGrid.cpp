@@ -4,7 +4,7 @@ namespace {
 constexpr Color STONE_COLOR = {128, 128, 128, 255};
 
 snaps::Block CopyAtPos(snaps::Block block, int x, int y) {
-    block.WorldPosition = {static_cast<float>(x) * snaps::BOX_SIZE, static_cast<float>(y) * snaps::BOX_SIZE};
+    block.WorldPosition = {static_cast<float>(x) * snaps::BLOCK_SIZE, static_cast<float>(y) * snaps::BLOCK_SIZE};
     return block;
 }
 

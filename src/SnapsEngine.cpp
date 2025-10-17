@@ -12,7 +12,7 @@ bool TouchesFloor(const Grid& grid, const int x, const int y, const Block& block
     if (not grid.InBounds(x, y+1)) return true;
     const auto& below = grid.At(x, y+1);
     return below.has_value()
-        and (block.WorldPosition.y + BOX_SIZE >= below->WorldPosition.y)
+        and (block.WorldPosition.y + BLOCK_SIZE >= below->WorldPosition.y)
         and below->Velocity.x == 0
         and block.Velocity.y >= 0;
 }
@@ -118,14 +118,14 @@ void SnapsEngine::SolveMovementLeft(int& x, int& y, Block& block) {
         return;
     }
 
-    const int desiredXGrid = static_cast<int>(block.WorldPosition.x) / BOX_SIZE;
+    const int desiredXGrid = static_cast<int>(block.WorldPosition.x) / BLOCK_SIZE;
     auto& blockLeft = m_Grid.At(x - 1, y);
     const bool wantsToMoveLeft = desiredXGrid < x and block.Velocity.x < 0;
     const float deceleration = block.Acceleration.x > 0 ? block.Acceleration.x : 0.0f;
 
     // Desired grid is occupied. Stop.
     if (wantsToMoveLeft and blockLeft.has_value()) {
-        block.WorldPosition.x = static_cast<float>(x) * BOX_SIZE;
+        block.WorldPosition.x = static_cast<float>(x) * BLOCK_SIZE;
         block.Velocity.x = 0;
         return;
     }
@@ -133,11 +133,11 @@ void SnapsEngine::SolveMovementLeft(int& x, int& y, Block& block) {
     // [DECELERATION ONLY]
     // Desired grid is free. Claim it if we have enough velocity to reach it.
     if (wantsToMoveLeft and not blockLeft.has_value()) {
-        const float minVelocityToReachNextGrid = std::sqrt(2.0f * deceleration * BOX_SIZE);
+        const float minVelocityToReachNextGrid = std::sqrt(2.0f * deceleration * BLOCK_SIZE);
 
         // Not enough velocity to reach the next grid. Stop and align to grid.
         if (std::abs(block.Velocity.x) < minVelocityToReachNextGrid) {
-            block.WorldPosition.x = static_cast<float>(x) * BOX_SIZE;
+            block.WorldPosition.x = static_cast<float>(x) * BLOCK_SIZE;
             block.Velocity.x = 0;
             return;
         } else { // Claim grid to the left.
@@ -159,7 +159,7 @@ void SnapsEngine::SolveMovementRight(int& x, int& y, Block& block) {
         return;
     }
 
-    const int desiredXGrid = static_cast<int>(block.WorldPosition.x + BOX_SIZE) / BOX_SIZE;
+    const int desiredXGrid = static_cast<int>(block.WorldPosition.x + BLOCK_SIZE) / BLOCK_SIZE;
     auto& blockRight = m_Grid.At(x + 1, y);
     const bool wantsToMoveRight = desiredXGrid > x and block.Velocity.x > 0;
     const float deceleration = block.Acceleration.x < 0 ? -block.Acceleration.x : 0.0f;
@@ -171,7 +171,7 @@ void SnapsEngine::SolveMovementRight(int& x, int& y, Block& block) {
             m_RightMovementContacts.push({x, y});
             x = -999;
         } else {
-            block.WorldPosition.x = static_cast<float>(x) * BOX_SIZE;
+            block.WorldPosition.x = static_cast<float>(x) * BLOCK_SIZE;
             block.Velocity.x = 0;
         }
         return;
@@ -180,11 +180,11 @@ void SnapsEngine::SolveMovementRight(int& x, int& y, Block& block) {
     // [DECELERATION ONLY]
     // Desired grid is free. Claim it if we have enough velocity to reach it.
     if (wantsToMoveRight and not blockRight.has_value()) {
-        const float minVelocityToReachNextGrid = std::sqrt(2.0f * deceleration * BOX_SIZE);
+        const float minVelocityToReachNextGrid = std::sqrt(2.0f * deceleration * BLOCK_SIZE);
 
         // Not enough velocity to reach next grid. Stop and align to grid.
         if (std::abs(block.Velocity.x) < minVelocityToReachNextGrid) {
-            block.WorldPosition.x = static_cast<float>(x) * BOX_SIZE;
+            block.WorldPosition.x = static_cast<float>(x) * BLOCK_SIZE;
             block.Velocity.x = 0;
             return;
         } else if (block.Velocity.x > 0) { // Claim grid to the right.
@@ -195,12 +195,12 @@ void SnapsEngine::SolveMovementRight(int& x, int& y, Block& block) {
     }
 
     // ALIGN POSITION TO GRID IF NECESSARY
-    const int distanceFromCorrectPosition = static_cast<int>(static_cast<float>(x * BOX_SIZE) - block.WorldPosition.x);
+    const int distanceFromCorrectPosition = static_cast<int>(static_cast<float>(x * BLOCK_SIZE) - block.WorldPosition.x);
     // Block stopped before reaching end of its own grid.
     if (block.Velocity.x == 0 and block.Acceleration.x == 0 and distanceFromCorrectPosition != 0) {
         std::cout << "block stopped without reaching end of its own grid\n";
         // Snap it to the grid in one shot.
-        block.WorldPosition.x = static_cast<float>(x) * BOX_SIZE;
+        block.WorldPosition.x = static_cast<float>(x) * BLOCK_SIZE;
     }
 }
 
@@ -214,13 +214,13 @@ void SnapsEngine::SolveMovementDown(int& x, int& y, Block& block) {
         return;
     }
 
-    const int desiredYGrid = static_cast<int>(block.WorldPosition.y + BOX_SIZE) / BOX_SIZE;
+    const int desiredYGrid = static_cast<int>(block.WorldPosition.y + BLOCK_SIZE) / BLOCK_SIZE;
     auto& blockBelow = m_Grid.At(x, y+1);
     const bool wantsToMoveDown = desiredYGrid > y;
 
     // Desired grid is occupied. Stop.
     if (wantsToMoveDown and blockBelow.has_value()) {
-        block.WorldPosition.y = static_cast<float>(y) * BOX_SIZE;
+        block.WorldPosition.y = static_cast<float>(y) * BLOCK_SIZE;
         block.Velocity.y = 0;
         return;
     }
@@ -237,7 +237,7 @@ void SnapsEngine::SolveMovementDown(int& x, int& y, Block& block) {
     // [ACCELERATION ONLY]
     // Only accelerated movements mid-air collision can result with a stop because
     // the gravity will make the block fall again to the desired spot.
-    if (blockBelow and block.WorldPosition.y + BOX_SIZE >= blockBelow->WorldPosition.y) { // collided with block mid-fall
+    if (blockBelow and block.WorldPosition.y + BLOCK_SIZE >= blockBelow->WorldPosition.y) { // collided with block mid-fall
         block.Velocity.y = 0;
     }
 }
@@ -252,7 +252,7 @@ void SnapsEngine::SolveMovementUp(int& x, int& y, Block& block) {
         return;
     }
 
-    const int desiredYGrid = static_cast<int>(block.WorldPosition.y) / BOX_SIZE;
+    const int desiredYGrid = static_cast<int>(block.WorldPosition.y) / BLOCK_SIZE;
     auto& blockAbove = m_Grid.At(x, y - 1);
     const bool wantsToMoveUp = desiredYGrid < y;
 
@@ -262,7 +262,7 @@ void SnapsEngine::SolveMovementUp(int& x, int& y, Block& block) {
             m_UpMovementContacts.push({x, y});
             x = -999;
         } else {
-            block.WorldPosition.y = static_cast<float>(y) * BOX_SIZE;
+            block.WorldPosition.y = static_cast<float>(y) * BLOCK_SIZE;
             block.Velocity.y = 0;
         }
         return;
@@ -271,14 +271,14 @@ void SnapsEngine::SolveMovementUp(int& x, int& y, Block& block) {
     // [DECELERATION ONLY]
     // Desired grid is free. Claim it if we have enough velocity to reach it.
     if (wantsToMoveUp and not blockAbove.has_value()) {
-        const float minVelocityToReachNextGrid = std::sqrt(2.0f * m_Gravity * BOX_SIZE);
+        const float minVelocityToReachNextGrid = std::sqrt(2.0f * m_Gravity * BLOCK_SIZE);
         // More accurate check if next grid is reachable
         // const float distanceToReachNextGrid = block.WorldPosition.y - desiredYGrid * BOX_SIZE;
         // const float minVelocityToReachNextGrid = std::sqrt(2.0f * GRAVITY * distanceToReachNextGrid);
 
         // Not enough velocity to reach next grid. Stop.
         if (std::abs(block.Velocity.y) < minVelocityToReachNextGrid) {
-            block.WorldPosition.y = static_cast<float>(y) * BOX_SIZE;
+            block.WorldPosition.y = static_cast<float>(y) * BLOCK_SIZE;
             block.Velocity.y = 0;
         } else { // Claim grid above.
             blockAbove = block;

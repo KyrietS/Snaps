@@ -116,8 +116,8 @@ void TestScenePreview::ShowFramePreview() {
     auto [x, y] = GetWorldToScreen2D({0.0f, 0.0f}, camera) - Vector2{1, 1};
     const int scissorX = static_cast<int>(x);
     const int scissorY = static_cast<int>(y);
-    const int scissorWidth = GetSelectedGrid().Width() * snaps::BOX_SIZE * static_cast<int>(camera.zoom) + 2;
-    const int scissorHeight = GetSelectedGrid().Height() * snaps::BOX_SIZE * static_cast<int>(camera.zoom) + 2;
+    const int scissorWidth = GetSelectedGrid().Width() * snaps::BLOCK_SIZE * static_cast<int>(camera.zoom) + 2;
+    const int scissorHeight = GetSelectedGrid().Height() * snaps::BLOCK_SIZE * static_cast<int>(camera.zoom) + 2;
     BeginScissorMode(scissorX, scissorY, scissorWidth, scissorHeight);
     DrawFramePreview();
     EndScissorMode();
@@ -165,8 +165,8 @@ void TestScenePreview::HandlePreviewInput() {
     const snaps::Grid& grid = GetSelectedGrid();
 
     auto [x, y] = GetScreenToWorld2D(GetMousePosition(), camera);
-    const int mouseGridX = x >= 0 ? static_cast<int>(x) / snaps::BOX_SIZE : -1;
-    const int mouseGridY = y >= 0 ? static_cast<int>(y) / snaps::BOX_SIZE : -1;
+    const int mouseGridX = x >= 0 ? static_cast<int>(x) / snaps::BLOCK_SIZE : -1;
+    const int mouseGridY = y >= 0 ? static_cast<int>(y) / snaps::BLOCK_SIZE : -1;
     if (grid.InBounds(mouseGridX, mouseGridY)) {
         m_HoveredGridPosition = std::make_pair(mouseGridX, mouseGridY);
     } else {
@@ -182,8 +182,8 @@ void TestScenePreview::DrawFramePreview() {
     const snaps::Grid& grid = GetSelectedGrid();
     const int width = grid.Width();
     const int height = grid.Height();
-    const int gridWidth = width * snaps::BOX_SIZE;
-    const int gridHeight = height * snaps::BOX_SIZE;
+    const int gridWidth = width * snaps::BLOCK_SIZE;
+    const int gridHeight = height * snaps::BLOCK_SIZE;
 
     if (camera.zoom > 4.0f) {
         DrawPixelGrid(gridWidth, gridHeight, Color{40, 40, 40, 255});
@@ -192,7 +192,7 @@ void TestScenePreview::DrawFramePreview() {
     for (const auto& block: grid.Blocks()) {
         if (block.has_value()) {
             auto [x, y] = ToWindowCoordinates(*block);
-            DrawRectangle(x, y, snaps::BOX_SIZE, snaps::BOX_SIZE, block->FillColor);
+            DrawRectangle(x, y, snaps::BLOCK_SIZE, snaps::BLOCK_SIZE, block->FillColor);
         }
     }
 
@@ -204,9 +204,9 @@ void TestScenePreview::DrawFramePreview() {
                 for (const auto& [gridX, gridY]: result.Positions) {
                     if (grid.InBounds(gridX, gridY) and not markedPositions.contains({gridX, gridY})) {
                         markedPositions.emplace(gridX, gridY);
-                        const int x = gridX * snaps::BOX_SIZE;
-                        const int y = gridY * snaps::BOX_SIZE;
-                        DrawRectangle(x, y, snaps::BOX_SIZE, snaps::BOX_SIZE, Color{255, 0, 0, 50});
+                        const int x = gridX * snaps::BLOCK_SIZE;
+                        const int y = gridY * snaps::BLOCK_SIZE;
+                        DrawRectangle(x, y, snaps::BLOCK_SIZE, snaps::BLOCK_SIZE, Color{255, 0, 0, 50});
                     }
                 }
             }
@@ -218,9 +218,9 @@ void TestScenePreview::DrawFramePreview() {
                 for (const auto& [gridX, gridY]: result.Positions) {
                     if (grid.InBounds(gridX, gridY) and not markedPositions.contains({gridX, gridY})) {
                         markedPositions.emplace(gridX, gridY);
-                        const int x = gridX * snaps::BOX_SIZE;
-                        const int y = gridY * snaps::BOX_SIZE;
-                        DrawRectangle(x, y, snaps::BOX_SIZE, snaps::BOX_SIZE, Color{0, 255, 0, 50});
+                        const int x = gridX * snaps::BLOCK_SIZE;
+                        const int y = gridY * snaps::BLOCK_SIZE;
+                        DrawRectangle(x, y, snaps::BLOCK_SIZE, snaps::BLOCK_SIZE, Color{0, 255, 0, 50});
                     }
                 }
             }
@@ -231,9 +231,9 @@ void TestScenePreview::DrawFramePreview() {
             for (int gridY = 0; gridY < height; gridY++) {
                 const auto& block = grid.At(gridX, gridY);
                 if (block.has_value() and block->IsDynamic) {
-                    const int x = gridX * snaps::BOX_SIZE;
-                    const int y = gridY * snaps::BOX_SIZE;
-                    DrawRect(x, y, snaps::BOX_SIZE, snaps::BOX_SIZE, RED);
+                    const int x = gridX * snaps::BLOCK_SIZE;
+                    const int y = gridY * snaps::BLOCK_SIZE;
+                    DrawRect(x, y, snaps::BLOCK_SIZE, snaps::BLOCK_SIZE, RED);
                 }
             }
         }
@@ -241,16 +241,16 @@ void TestScenePreview::DrawFramePreview() {
 
     // Draw hovered grid
     if (m_HoveredGridPosition.has_value()) {
-        const int x = m_HoveredGridPosition->first * snaps::BOX_SIZE;
-        const int y = m_HoveredGridPosition->second * snaps::BOX_SIZE;
-        DrawRect(x, y, snaps::BOX_SIZE, snaps::BOX_SIZE, YELLOW);
+        const int x = m_HoveredGridPosition->first * snaps::BLOCK_SIZE;
+        const int y = m_HoveredGridPosition->second * snaps::BLOCK_SIZE;
+        DrawRect(x, y, snaps::BLOCK_SIZE, snaps::BLOCK_SIZE, YELLOW);
     }
 
     // Draw selected grid
     if (m_SelectedGridPosition.has_value()) {
-        const int x = m_SelectedGridPosition->first * snaps::BOX_SIZE;
-        const int y = m_SelectedGridPosition->second * snaps::BOX_SIZE;
-        DrawRectangle(x, y, snaps::BOX_SIZE, snaps::BOX_SIZE, Color{255, 255, 0, 70});
+        const int x = m_SelectedGridPosition->first * snaps::BLOCK_SIZE;
+        const int y = m_SelectedGridPosition->second * snaps::BLOCK_SIZE;
+        DrawRectangle(x, y, snaps::BLOCK_SIZE, snaps::BLOCK_SIZE, Color{255, 255, 0, 70});
     }
 
     // Draw grid outline (don't use DrawRectangleLines because corner is broken)
@@ -263,8 +263,8 @@ Camera2D TestScenePreview::GetPreviewCamera() const {
     const int height = grid.Height();
 
     const Vector2 previewPos = {static_cast<float>(GetScreenWidth()) / 2, static_cast<float>(GetScreenHeight()) / 2};
-    const int gridWidth = width * snaps::BOX_SIZE;
-    const int gridHeight = height * snaps::BOX_SIZE;
+    const int gridWidth = width * snaps::BLOCK_SIZE;
+    const int gridHeight = height * snaps::BLOCK_SIZE;
 
     const Camera2D camera = {
         .offset = previewPos + m_PreviewOffset,
@@ -450,7 +450,7 @@ void TestScenePreview::ShowTileInspection() {
     if (block.has_value()) {
         const Camera2D camera = GetPreviewCamera();
         BeginMode2D(camera);
-        DrawRect(static_cast<int>(block->WorldPosition.x), static_cast<int>(block->WorldPosition.y), snaps::BOX_SIZE, snaps::BOX_SIZE,
+        DrawRect(static_cast<int>(block->WorldPosition.x), static_cast<int>(block->WorldPosition.y), snaps::BLOCK_SIZE, snaps::BLOCK_SIZE,
                  selectedTileColor);
         EndMode2D();
     }

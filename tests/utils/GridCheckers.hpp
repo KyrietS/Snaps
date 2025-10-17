@@ -117,14 +117,14 @@ MATCHER_P2(IsAligned, x, y, std::format("is{} aligned to ({}, {})", (negation ? 
     return arg.WorldPosition == expectedPos;
 }
 inline auto BlockIsAlignedAt(const int gridX, const int gridY) {
-    return Block(gridX, gridY, IsAligned(gridX * snaps::BOX_SIZE, gridY * snaps::BOX_SIZE));
+    return Block(gridX, gridY, IsAligned(gridX * snaps::BLOCK_SIZE, gridY * snaps::BLOCK_SIZE));
 }
 MATCHER_P(IsXAligned, x, std::format("is{} X-aligned to ({}, _)", (negation ? " not" : ""), x)) {
     const float expectedXPos = static_cast<float>(x);
     return arg.WorldPosition.x == expectedXPos;
 }
 inline auto BlockIsXAlignedAt(const int gridX, const int gridY) {
-    return Block(gridX, gridY, IsXAligned(gridX * snaps::BOX_SIZE));
+    return Block(gridX, gridY, IsXAligned(gridX * snaps::BLOCK_SIZE));
 }
 
 inline testing::Matcher<Vector2> Vector(const testing::Matcher<float>& x, const testing::Matcher<float>& y) {

@@ -19,7 +19,7 @@ bool tick = false;
 
 Block StoneBlock(int x, int y) {
     return Block {
-        .WorldPosition = {static_cast<float>(x) * BOX_SIZE, static_cast<float>(y) * BOX_SIZE},
+        .WorldPosition = {static_cast<float>(x) * BLOCK_SIZE, static_cast<float>(y) * BLOCK_SIZE},
         .FillColor = STONE_COLOR,
         .IsDynamic = false
     };
@@ -27,7 +27,7 @@ Block StoneBlock(int x, int y) {
 
 Block SandBlock(int x, int y) {
     return Block {
-        .WorldPosition = {static_cast<float>(x) * BOX_SIZE, static_cast<float>(y) * BOX_SIZE},
+        .WorldPosition = {static_cast<float>(x) * BLOCK_SIZE, static_cast<float>(y) * BLOCK_SIZE},
         .FillColor = SAND_COLOR,
         .IsDynamic = true
     };
@@ -39,15 +39,15 @@ void SetStone(Grid& grid, int x, int y) {
 
 void InitializeMap(Grid& grid) {
 
-    const int gridWidth = GetScreenWidth() / BOX_SIZE;
-    const int gridHeight = GetScreenHeight() / BOX_SIZE - 3;
+    const int gridWidth = GetScreenWidth() / BLOCK_SIZE;
+    const int gridHeight = GetScreenHeight() / BLOCK_SIZE - 3;
 
     // TOP-BOTTOM border
     for (int x = 0; x <= gridWidth; x++) {
         SetStone(grid, x, 0);
         SetStone(grid, x, 1);
-        SetStone(grid, x, GetScreenHeight() / BOX_SIZE - 3);
-        SetStone(grid, x , GetScreenHeight() / BOX_SIZE - 4);
+        SetStone(grid, x, GetScreenHeight() / BLOCK_SIZE - 3);
+        SetStone(grid, x , GetScreenHeight() / BLOCK_SIZE - 4);
     }
     // LEFT-RIGHT border
     for (int y = 0; y <= gridHeight; y++) {
@@ -79,13 +79,13 @@ void DrawUi(const Grid& grid) {
                 const auto& block = grid.At(x, y);
                 if (block.has_value()) {
                     Color color = block->IsDynamic ? BLUE : RED;
-                    DrawRectangleLines(x * BOX_SIZE, y * BOX_SIZE, BOX_SIZE, BOX_SIZE, color);
+                    DrawRectangleLines(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE, color);
                 }
             }
         }
     }
 
-    Vector2 gridPos = {GetMousePosition() / BOX_SIZE};
+    Vector2 gridPos = {GetMousePosition() / BLOCK_SIZE};
     DrawText(TextFormat(
         "(%d, %d)",
         static_cast<int>(gridPos.x),
@@ -100,17 +100,17 @@ void HandleInput(Grid& grid) {
     const Vector2 mousePos = GetMousePosition();
 
     // Snap to grid 16x16
-    const int worldPosX = static_cast<int>(mousePos.x) / BOX_SIZE * BOX_SIZE;
-    const int worldPosY = static_cast<int>(mousePos.y) / BOX_SIZE * BOX_SIZE;
+    const int worldPosX = static_cast<int>(mousePos.x) / BLOCK_SIZE * BLOCK_SIZE;
+    const int worldPosY = static_cast<int>(mousePos.y) / BLOCK_SIZE * BLOCK_SIZE;
 
-    const int gridPosX = static_cast<int>(mousePos.x) / BOX_SIZE;
-    const int gridPosY = static_cast<int>(mousePos.y) / BOX_SIZE;
+    const int gridPosX = static_cast<int>(mousePos.x) / BLOCK_SIZE;
+    const int gridPosY = static_cast<int>(mousePos.y) / BLOCK_SIZE;
 
-    DrawRectangleLines(worldPosX, worldPosY, BOX_SIZE, BOX_SIZE, SAND_COLOR);
+    DrawRectangleLines(worldPosX, worldPosY, BLOCK_SIZE, BLOCK_SIZE, SAND_COLOR);
 
     if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
         const auto& below = grid.At(gridPosX, gridPosY+1);
-        if (below.has_value() and below->WorldPosition.y < (gridPosY+1) * BOX_SIZE) return;
+        if (below.has_value() and below->WorldPosition.y < (gridPosY+1) * BLOCK_SIZE) return;
         grid.At(gridPosX, gridPosY) = Block {
             .WorldPosition = {static_cast<float>(worldPosX), static_cast<float>(worldPosY)},
             .FillColor = SAND_COLOR,
@@ -133,7 +133,7 @@ void HandleInput(Grid& grid) {
             if (block and block->IsDynamic) {
                 // AddForce(*block, {0, -BOX_SIZE * 2 * GRAVITY});
                 const int distanceToJump = 12;
-                const int pixelsToJump = BOX_SIZE * distanceToJump + 2; // +1 to add a margin
+                const int pixelsToJump = BLOCK_SIZE * distanceToJump + 2; // +1 to add a margin
                 const float jumpVelocity = std::sqrt(400.0f * pixelsToJump);
                 const Vector2 jumpImpulse = Vector2{0, -jumpVelocity} / block->InvMass;
                 std::cout << "jump velocity: " << jumpVelocity << std::endl;
@@ -168,7 +168,7 @@ void HandleInput(Grid& grid) {
 void Draw(const Grid& grid) {
     for (const auto& block : grid.Blocks()) {
         if (block.has_value()) {
-            DrawRectangle(static_cast<int>(block->WorldPosition.x), static_cast<int>(block->WorldPosition.y), BOX_SIZE, BOX_SIZE, block->FillColor);
+            DrawRectangle(static_cast<int>(block->WorldPosition.x), static_cast<int>(block->WorldPosition.y), BLOCK_SIZE, BLOCK_SIZE, block->FillColor);
         }
     }
 }

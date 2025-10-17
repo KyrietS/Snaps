@@ -49,12 +49,12 @@ void SceneTest::TearDown() {
 
 void SceneTest::AddSand(const int x, const int y) const {
     auto& block = GetBlockOpt(x, y);
-    block = SandBlock(x * snaps::BOX_SIZE, y * snaps::BOX_SIZE);
+    block = SandBlock(x * snaps::BLOCK_SIZE, y * snaps::BLOCK_SIZE);
 }
 
 void SceneTest::AddWall(int x, int y) const {
     auto& block = GetBlockOpt(x, y);
-    block = StoneBlock(x * snaps::BOX_SIZE, y * snaps::BOX_SIZE);
+    block = StoneBlock(x * snaps::BLOCK_SIZE, y * snaps::BLOCK_SIZE);
 }
 
 snaps::Block & SceneTest::GetBlock(const int x, const int y) const {

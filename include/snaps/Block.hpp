@@ -5,7 +5,7 @@
 
 namespace snaps {
 
-constexpr int BOX_SIZE = 16;
+constexpr int BLOCK_SIZE = 16;
 
 struct Block {
     Vector2 WorldPosition = {0, 0};
