@@ -6,7 +6,7 @@
 namespace snaps {
 class SnapsEngine {
 public:
-    SnapsEngine(Grid& grid);
+    explicit SnapsEngine(Grid& grid);
 
     void Step(float deltaTime);
 
@@ -19,6 +19,9 @@ private:
     void SolveMovementLeft(int& gridX, int& gridY, Block& block);
     void SolveMovementUp(int& gridX, int& gridY, Block& block);
     void SolveMovementDown(int& gridX, int& gridY, Block& block);
+
+    void ApplyGravity(Block& block);
+    void ApplyFriction(Block& block, float multiplier);
 
     Grid& m_Grid;
 

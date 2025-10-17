@@ -30,34 +30,6 @@ inline void AddForce(Block& block, const Vector2 force) {
     block.ForceAccum += force;
 }
 
-inline void ApplyGravity(Block& block) {
-    block.ForceAccum += Vector2{0.0f, GRAVITY} * block.GravityScale / block.InvMass;
-}
-
-// TODO: this should be a private method of SnapsEngine
-inline void ApplyFriction(Block& block, float multiplier, float deltaTime) {
-    float speed = std::abs(block.Velocity.x) + block.ForceAccum.x * block.InvMass * deltaTime;
-    if (speed <= 1e-6f) {
-        block.Velocity.x = 0;
-        return;
-    }
-
-    float dir = block.Velocity.x > 0 ? 1.0f : -1.0f;
-    float mass = 1.0f / block.InvMass;
-
-    // Assume the gravity is already applied and it's directed downwards
-    float frictionForce = std::abs(block.ForceAccum.y) * multiplier * mass * dir;
-
-    // Clamp: if this force would reverse velocity, zero it instead
-    float maxForce = mass * speed / deltaTime;
-    if (std::abs(frictionForce) > maxForce) {
-        frictionForce = maxForce * dir;
-        std::cout << "friction stopped the object" << std::endl;
-    }
-
-    block.ForceAccum.x -= frictionForce;
-}
-
 /**
  * Applies an impulse force to the block, changing its velocity immediately.
  * The impulse is scaled by the block's mass so that heavier blocks need stronger impulse to move.

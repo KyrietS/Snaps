@@ -33,9 +33,9 @@ void SnapsEngine::SimulatePhysics() {
             if (block.has_value() and block->IsDynamic) {
                 ApplyGravity(*block);
                 if (TouchesFloor(m_Grid, x, y, *block)) {
-                    ApplyFriction(*block, 1.0f, m_DeltaTime);
+                    ApplyFriction(*block, 1.0f);
                 } else {
-                    ApplyFriction(*block, 0.0f, m_DeltaTime); // drag
+                    ApplyFriction(*block, 0.0f); // drag
                 }
                 Integrate(*block);
             }
@@ -48,8 +48,8 @@ void SnapsEngine::SimulatePhysics() {
         }
         m_SecondPass = true;
         while (not m_RightMovementContacts.empty()) {
-            auto [x, y] = m_RightMovementContacts.top();
-            SolveGridPhysics(x, y);
+            auto [xx, yy] = m_RightMovementContacts.top();
+            SolveGridPhysics(xx, yy);
             m_RightMovementContacts.pop();
         }
         m_SecondPass = false;
@@ -196,7 +196,7 @@ void SnapsEngine::SolveMovementRight(int& x, int& y, Block& block) {
     }
 
     // ALIGN POSITION TO GRID IF NECESSARY
-    const int distanceFromCorrectPosition = x * BOX_SIZE - block.WorldPosition.x;
+    const int distanceFromCorrectPosition = static_cast<int>(static_cast<float>(x * BOX_SIZE) - block.WorldPosition.x);
     // Block stopped before reaching end of its own grid.
     if (block.Velocity.x == 0 and block.Acceleration.x == 0 and distanceFromCorrectPosition != 0) {
         std::cout << "block stopped without reaching end of its own grid\n";
@@ -287,6 +287,33 @@ void SnapsEngine::SolveMovementUp(int& x, int& y, Block& block) {
             y -= 1;
         }
     }
+}
+
+void SnapsEngine::ApplyGravity(Block& block) {
+    block.ForceAccum += Vector2{0.0f, GRAVITY} * block.GravityScale / block.InvMass;
+}
+
+void SnapsEngine::ApplyFriction(Block& block, float multiplier) {
+    float speed = std::abs(block.Velocity.x) + block.ForceAccum.x * block.InvMass * m_DeltaTime;
+    if (speed <= 1e-6f) {
+        block.Velocity.x = 0;
+        return;
+    }
+
+    float dir = block.Velocity.x > 0 ? 1.0f : -1.0f;
+    float mass = 1.0f / block.InvMass;
+
+    // Assume the gravity is already applied and it's directed downwards
+    float frictionForce = std::abs(block.ForceAccum.y) * multiplier * mass * dir;
+
+    // Clamp: if this force would reverse velocity, zero it instead
+    float maxForce = mass * speed / m_DeltaTime;
+    if (std::abs(frictionForce) > maxForce) {
+        frictionForce = maxForce * dir;
+        std::cout << "friction stopped the object" << std::endl;
+    }
+
+    block.ForceAccum.x -= frictionForce;
 }
 
 }
