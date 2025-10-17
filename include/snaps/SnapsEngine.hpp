@@ -10,6 +10,9 @@ public:
 
     void Step(float deltaTime);
 
+    void SetGravity(const float gravity) { m_Gravity = gravity; }
+    float GetGravity() const { return m_Gravity; }
+
 private:
     void SimulatePhysics();
     void Integrate(Block&);
@@ -30,6 +33,7 @@ private:
         int y;
     };
 
+    float m_Gravity = 200.0f;
     float m_DeltaTime = 0.0f;
     bool m_SecondPass = false;
     std::stack<SecondPassContact> m_RightMovementContacts;

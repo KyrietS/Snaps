@@ -1,10 +1,12 @@
 #pragma once
-#include "Constants.hpp"
 #include <raylib.h>
 #include <raymath.h>
 #include <iostream>
 
 namespace snaps {
+
+constexpr int BOX_SIZE = 16;
+
 struct Block {
     Vector2 WorldPosition = {0, 0};
     Vector2 Velocity = {0, 0};

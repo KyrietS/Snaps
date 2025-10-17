@@ -212,7 +212,7 @@ TEST_F(ImpulseTest, ImpulseAngular) {
     AddSand(1, 3);
 
     auto& block = GetBlock(1, 3);
-    snaps::ApplyImpulse(block, {50.0f, -snaps::GRAVITY});
+    snaps::ApplyImpulse(block, {50.0f, -m_Engine->GetGravity()});
 
     m_Scene->Tick(); // the block moves up and right
     EXPECT_SCENE(m_Scene, check::BlockIsEmptyAt(1, 3));

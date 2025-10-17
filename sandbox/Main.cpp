@@ -3,10 +3,8 @@
 #include <cmath>
 #include <iostream>
 #include <raymath.h>
-#include <stack>
 
 #include "snaps/Block.hpp"
-#include "snaps/Constants.hpp"
 #include "snaps/Grid.hpp"
 #include "snaps/SnapsEngine.hpp"
 
@@ -136,7 +134,7 @@ void HandleInput(Grid& grid) {
                 // AddForce(*block, {0, -BOX_SIZE * 2 * GRAVITY});
                 const int distanceToJump = 12;
                 const int pixelsToJump = BOX_SIZE * distanceToJump + 2; // +1 to add a margin
-                const float jumpVelocity = std::sqrt(2 * GRAVITY * pixelsToJump);
+                const float jumpVelocity = std::sqrt(400.0f * pixelsToJump);
                 const Vector2 jumpImpulse = Vector2{0, -jumpVelocity} / block->InvMass;
                 std::cout << "jump velocity: " << jumpVelocity << std::endl;
                 std::cout << "impulse: " << jumpImpulse.y << std::endl;
