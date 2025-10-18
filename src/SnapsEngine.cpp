@@ -36,24 +36,11 @@ void SnapsEngine::SimulatePhysics() {
 
     for (int y = m_Grid.Height() - 1; y >= 0; y--) {
         for (int x = 0; x < m_Grid.Width(); x++) {
-            SolveGridPhysics(x, y);
+            SolveGridPhysics(x, y, CollisionPass::First);
         }
-        m_SecondPass = true;
-        while (not m_RightMovementContacts.empty()) {
-            auto [xx, yy] = m_RightMovementContacts.top();
-            SolveGridPhysics(xx, yy);
-            m_RightMovementContacts.pop();
-        }
-        m_SecondPass = false;
+        SecondPassGridPhysicsHorizontal();
     }
-
-    m_SecondPass = true;
-    while (not m_UpMovementContacts.empty()) {
-        auto [x, y] = m_UpMovementContacts.top();
-        SolveGridPhysics(x, y);
-        m_UpMovementContacts.pop();
-    }
-    m_SecondPass = false;
+    SecondPassGridPhysicsVertical();
 }
 
 void SnapsEngine::SimulateMovement(const int x, const int y, Block& block) {
@@ -88,15 +75,14 @@ void SnapsEngine::Integrate(Block& block) {
     block.NeedsCollisionResolution = true;
 }
 
-void SnapsEngine::SolveGridPhysics(int x, int y) {
+void SnapsEngine::SolveGridPhysics(int x, int y, const CollisionPass collisionPass) {
     auto& block = m_Grid.At(x, y);
     if (not block.has_value() or not block->IsDynamic or not block->NeedsCollisionResolution) return;
-    SolveGridPhysics(x, y, *block);
+    SolveGridPhysics(x, y, *block, collisionPass);
 }
 
-void SnapsEngine::SolveGridPhysics(int x, int y, Block& block) {
-
-    MovementResolution resolution {x, y};
+void SnapsEngine::SolveGridPhysics(const int gridX, const int gridY, Block& block, const CollisionPass collisionPass) {
+    MovementResolution resolution {gridX, gridY, collisionPass};
 
     SolveMovementHorizontal(block, resolution);
     if (resolution.Resolved) return;
@@ -104,11 +90,28 @@ void SnapsEngine::SolveGridPhysics(int x, int y, Block& block) {
     assert(m_Grid.At(resolution.X, resolution.Y).has_value());
     auto& movedBlock = *m_Grid.At(resolution.X, resolution.Y);
 
-    SolveMovementVertical(block, resolution);
+    SolveMovementVertical(movedBlock, resolution);
     if (resolution.Resolved) return;
 
     // Mark as resolved so we don't try to resolve it again this frame.
     movedBlock.NeedsCollisionResolution = false;
+}
+
+
+void SnapsEngine::SecondPassGridPhysicsHorizontal() {
+    while (not m_RightMovementContacts.empty()) {
+        auto [x, y] = m_RightMovementContacts.top();
+        SolveGridPhysics(x, y, CollisionPass::Second);
+        m_RightMovementContacts.pop();
+    }
+}
+
+void SnapsEngine::SecondPassGridPhysicsVertical() {
+    while (not m_UpMovementContacts.empty()) {
+        auto [x, y] = m_UpMovementContacts.top();
+        SolveGridPhysics(x, y, CollisionPass::Second);
+        m_UpMovementContacts.pop();
+    }
 }
 
 void SnapsEngine::SolveMovementHorizontal(Block& block, MovementResolution& resolution) {
@@ -188,7 +191,7 @@ void SnapsEngine::SolveMovementRight(Block& block, MovementResolution& resolutio
 
     // Desired grid is occupied. Stop.
     if (wantsToMoveRight and blockRight.has_value()) {
-        if (blockRight->IsDynamic and not m_SecondPass) {
+        if (blockRight->IsDynamic and resolution.CollisionPass == CollisionPass::First) {
             // Try to solve in the second pass
             m_RightMovementContacts.push({x, y});
             resolution.Resolved = true;
@@ -284,7 +287,7 @@ void SnapsEngine::SolveMovementUp(Block& block, MovementResolution& resolution) 
 
     // Desired grid is occupied. Stop.
     if (wantsToMoveUp and blockAbove.has_value()) {
-        if (blockAbove->IsDynamic and not m_SecondPass) {
+        if (blockAbove->IsDynamic and resolution.CollisionPass == CollisionPass::First) {
             m_UpMovementContacts.push({x, y});
             resolution.Resolved = true;
         } else {

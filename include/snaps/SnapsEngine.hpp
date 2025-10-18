@@ -19,18 +19,21 @@ public:
     Config& GetConfig() { return m_Config; }
 
 private:
+    enum class CollisionPass { First, Second };
     void SimulatePhysics();
     void SimulateMovement(int x, int y, Block& block);
     void Integrate(Block&);
-    void SolveGridPhysics(int gridX, int gridY);
-    void SolveGridPhysics(int gridX, int gridY, Block& block);
+    void SolveGridPhysics(int gridX, int gridY, CollisionPass);
+    void SolveGridPhysics(int gridX, int gridY, Block& block, CollisionPass);
+    void SecondPassGridPhysicsHorizontal();
+    void SecondPassGridPhysicsVertical();
 
     struct MovementResolution {
-        MovementResolution(const int x, const int y) : X(x), Y(y) {}
+        MovementResolution(const int x, const int y, CollisionPass pass) : X(x), Y(y), CollisionPass(pass) {}
         int X;
         int Y;
+        CollisionPass CollisionPass;
         bool Resolved = false;
-        bool SecondPass = false;
     };
 
     void SolveMovementHorizontal(Block&, MovementResolution&);
@@ -53,7 +56,6 @@ private:
 
     Config m_Config;
     float m_DeltaTime = 0.0f;
-    bool m_SecondPass = false;
     std::stack<SecondPassContact> m_RightMovementContacts;
     std::stack<SecondPassContact> m_UpMovementContacts;
 };
