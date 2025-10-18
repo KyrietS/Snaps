@@ -189,7 +189,7 @@ void TestScenePreview::DrawFramePreview() {
         DrawPixelGrid(gridWidth, gridHeight, Color{40, 40, 40, 255});
     }
 
-    for (const auto& block: grid.Blocks()) {
+    for (const auto& block: grid.Data()) {
         if (block.has_value()) {
             auto [x, y] = ToWindowCoordinates(*block);
             DrawRectangle(x, y, snaps::BLOCK_SIZE, snaps::BLOCK_SIZE, block->FillColor);

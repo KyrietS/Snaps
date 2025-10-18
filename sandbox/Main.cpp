@@ -129,7 +129,7 @@ void HandleInput(Grid& grid) {
     }
 
     if (IsKeyReleased(KEY_UP)) {
-        for (auto& block : grid.Blocks()) {
+        for (auto& block : grid.Data()) {
             if (block and block->IsDynamic) {
                 // AddForce(*block, {0, -BOX_SIZE * 2 * GRAVITY});
                 const int distanceToJump = 12;
@@ -143,14 +143,14 @@ void HandleInput(Grid& grid) {
         }
     }
     if (IsKeyReleased(KEY_LEFT)) {
-        for (auto& block : grid.Blocks()) {
+        for (auto& block : grid.Data()) {
             if (block and block->IsDynamic) {
                 ApplyImpulse(*block, {-200.0f, 0});
             }
         }
     }
     if (IsKeyReleased(KEY_RIGHT)) {
-        for (auto& block : grid.Blocks()) {
+        for (auto& block : grid.Data()) {
             if (block and block->IsDynamic) {
                 ApplyImpulse(*block, {+333.f, 0});
             }
@@ -166,7 +166,7 @@ void HandleInput(Grid& grid) {
 }
 
 void Draw(const Grid& grid) {
-    for (const auto& block : grid.Blocks()) {
+    for (const auto& block : grid.Data()) {
         if (block.has_value()) {
             DrawRectangle(static_cast<int>(block->WorldPosition.x), static_cast<int>(block->WorldPosition.y), BLOCK_SIZE, BLOCK_SIZE, block->FillColor);
         }

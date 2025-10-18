@@ -26,19 +26,12 @@ void SnapsEngine::Step(float deltaTime) {
 }
 
 void SnapsEngine::SimulatePhysics() {
-    for (int y = 0; y < m_Grid.Height(); y++) {
-        for (int x = 0; x < m_Grid.Width(); x++) {
-            auto& block = m_Grid.At(x, y);
-            if (block.has_value() and block->IsDynamic) {
-                ApplyGravity(*block);
-                if (TouchesFloor(m_Grid, x, y, *block)) {
-                    ApplyFriction(*block, 1.0f);
-                } else {
-                    ApplyFriction(*block, 0.0f); // drag
-                }
-                Integrate(*block);
-            }
-        }
+    const std::size_t numOfTiles = m_Grid.Data().size();
+    for (std::size_t i = 0; i < numOfTiles; i++) {
+        auto& block = m_Grid.At(i);
+        const auto [x, y] = m_Grid.GetXY(i);
+        if (block.has_value())
+            SimulateMovement(x, y, *block);
     }
 
     for (int y = m_Grid.Height() - 1; y >= 0; y--) {
@@ -63,8 +56,20 @@ void SnapsEngine::SimulatePhysics() {
     m_SecondPass = false;
 }
 
+void SnapsEngine::SimulateMovement(const int x, const int y, Block& block) {
+    if (block.IsDynamic) {
+        ApplyGravity(block);
+        if (TouchesFloor(m_Grid, x, y, block)) {
+            ApplyFriction(block, 1.0f);
+        } else {
+            ApplyFriction(block, 0.0f); // drag
+        }
+        Integrate(block);
+    }
+}
+
 void SnapsEngine::Integrate(Block& block) {
-    if (not block.IsDynamic or block.InvMass <= 0.0f) return;
+    if (block.InvMass <= 0.0f) return;
 
     block.Acceleration = {
         block.ForceAccum.x * block.InvMass,
@@ -86,29 +91,44 @@ void SnapsEngine::Integrate(Block& block) {
 void SnapsEngine::SolveGridPhysics(int x, int y) {
     auto& block = m_Grid.At(x, y);
     if (not block.has_value() or not block->IsDynamic or not block->NeedsCollisionResolution) return;
+    SolveGridPhysics(x, y, *block);
+}
 
-    if (block->Velocity.x >= 0)
-        SolveMovementRight(x, y, *block);
-    else
-        SolveMovementLeft(x, y, *block);
+void SnapsEngine::SolveGridPhysics(int x, int y, Block& block) {
 
-    if (x == -999) return; // will continue in second pass
+    MovementResolution resolution {x, y};
 
-    auto& movedBlock = m_Grid.At(x, y).value();
+    SolveMovementHorizontal(block, resolution);
+    if (resolution.Resolved) return;
 
-    if (movedBlock.Velocity.y >= 0)
-        SolveMovementDown(x, y, movedBlock);
-    else
-        SolveMovementUp(x, y, movedBlock);
+    assert(m_Grid.At(resolution.X, resolution.Y).has_value());
+    auto& movedBlock = *m_Grid.At(resolution.X, resolution.Y);
 
-    if (x == -999) return; // will continue in second pass
+    SolveMovementVertical(block, resolution);
+    if (resolution.Resolved) return;
 
     // Mark as resolved so we don't try to resolve it again this frame.
     movedBlock.NeedsCollisionResolution = false;
 }
 
+void SnapsEngine::SolveMovementHorizontal(Block& block, MovementResolution& resolution) {
+    if (block.Velocity.x >= 0)
+        SolveMovementRight(block, resolution);
+    else
+        SolveMovementLeft(block, resolution);
+}
 
-void SnapsEngine::SolveMovementLeft(int& x, int& y, Block& block) {
+void SnapsEngine::SolveMovementVertical(Block& block, MovementResolution& resolution) {
+    if (block.Velocity.y >= 0)
+        SolveMovementDown(block, resolution);
+    else
+        SolveMovementUp(block, resolution);
+}
+
+void SnapsEngine::SolveMovementLeft(Block& block, MovementResolution& resolution) {
+    const int x = resolution.X;
+    const int y = resolution.Y;
+
     // Block is not moving left
     if (block.Velocity.x >= 0) return; // moving right
 
@@ -139,17 +159,19 @@ void SnapsEngine::SolveMovementLeft(int& x, int& y, Block& block) {
         if (std::abs(block.Velocity.x) < minVelocityToReachNextGrid) {
             block.WorldPosition.x = static_cast<float>(x) * BLOCK_SIZE;
             block.Velocity.x = 0;
-            return;
         } else { // Claim grid to the left.
             blockLeft = block;
             m_Grid.Remove(x, y);
-            x -= 1;
+            resolution.X -= 1;
         }
     }
 }
 
 
-void SnapsEngine::SolveMovementRight(int& x, int& y, Block& block) {
+void SnapsEngine::SolveMovementRight(Block& block, MovementResolution& resolution) {
+    const int x = resolution.X;
+    const int y = resolution.Y;
+
     // Block is not moving right
     if (block.Velocity.x < 0) return; // moving left
 
@@ -169,7 +191,7 @@ void SnapsEngine::SolveMovementRight(int& x, int& y, Block& block) {
         if (blockRight->IsDynamic and not m_SecondPass) {
             // Try to solve in the second pass
             m_RightMovementContacts.push({x, y});
-            x = -999;
+            resolution.Resolved = true;
         } else {
             block.WorldPosition.x = static_cast<float>(x) * BLOCK_SIZE;
             block.Velocity.x = 0;
@@ -190,7 +212,7 @@ void SnapsEngine::SolveMovementRight(int& x, int& y, Block& block) {
         } else if (block.Velocity.x > 0) { // Claim grid to the right.
             blockRight = block;
             m_Grid.Remove(x, y);
-            x += 1;
+            resolution.X += 1;
         }
     }
 
@@ -204,7 +226,9 @@ void SnapsEngine::SolveMovementRight(int& x, int& y, Block& block) {
     }
 }
 
-void SnapsEngine::SolveMovementDown(int& x, int& y, Block& block) {
+void SnapsEngine::SolveMovementDown(Block& block, MovementResolution& resolution) {
+    const int x = resolution.X;
+    const int y = resolution.Y;
     // Block is not moving down
     if (block.Velocity.y < 0) return;
 
@@ -230,7 +254,7 @@ void SnapsEngine::SolveMovementDown(int& x, int& y, Block& block) {
     if (wantsToMoveDown and not blockBelow.has_value()) {
         blockBelow = block;
         m_Grid.Remove(x, y);
-        y += 1;
+        resolution.Y += 1;
         return;
     }
 
@@ -242,7 +266,9 @@ void SnapsEngine::SolveMovementDown(int& x, int& y, Block& block) {
     }
 }
 
-void SnapsEngine::SolveMovementUp(int& x, int& y, Block& block) {
+void SnapsEngine::SolveMovementUp(Block& block, MovementResolution& resolution) {
+    const int x = resolution.X;
+    const int y = resolution.Y;
     // Block is not moving up
     if (block.Velocity.y >= 0) return; // moving down
 
@@ -260,7 +286,7 @@ void SnapsEngine::SolveMovementUp(int& x, int& y, Block& block) {
     if (wantsToMoveUp and blockAbove.has_value()) {
         if (blockAbove->IsDynamic and not m_SecondPass) {
             m_UpMovementContacts.push({x, y});
-            x = -999;
+            resolution.Resolved = true;
         } else {
             block.WorldPosition.y = static_cast<float>(y) * BLOCK_SIZE;
             block.Velocity.y = 0;
@@ -283,7 +309,7 @@ void SnapsEngine::SolveMovementUp(int& x, int& y, Block& block) {
         } else { // Claim grid above.
             blockAbove = block;
             m_Grid.Remove(x, y);
-            y -= 1;
+            resolution.Y -= 1;
         }
     }
 }

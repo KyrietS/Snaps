@@ -20,13 +20,26 @@ public:
 
 private:
     void SimulatePhysics();
+    void SimulateMovement(int x, int y, Block& block);
     void Integrate(Block&);
     void SolveGridPhysics(int gridX, int gridY);
+    void SolveGridPhysics(int gridX, int gridY, Block& block);
 
-    void SolveMovementRight(int& gridX, int& gridY, Block& block);
-    void SolveMovementLeft(int& gridX, int& gridY, Block& block);
-    void SolveMovementUp(int& gridX, int& gridY, Block& block);
-    void SolveMovementDown(int& gridX, int& gridY, Block& block);
+    struct MovementResolution {
+        MovementResolution(const int x, const int y) : X(x), Y(y) {}
+        int X;
+        int Y;
+        bool Resolved = false;
+        bool SecondPass = false;
+    };
+
+    void SolveMovementHorizontal(Block&, MovementResolution&);
+    void SolveMovementRight(Block&, MovementResolution&);
+    void SolveMovementLeft(Block&, MovementResolution&);
+
+    void SolveMovementVertical(Block& block, MovementResolution&);
+    void SolveMovementUp(Block& block, MovementResolution&);
+    void SolveMovementDown(Block& block, MovementResolution&);
 
     void ApplyGravity(Block& block);
     void ApplyFriction(Block& block, float multiplier);

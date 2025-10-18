@@ -722,7 +722,7 @@ TEST_F(FrictionTest, NoFrictionWhenTwoBlocksAreSlidingOnEachOther) {
 struct BoundaryTest : SceneTest {
     BoundaryTest() {
         InitializeTestScene(5, 5);
-        for (auto& block: m_Grid->Blocks()) {
+        for (auto& block: m_Grid->Data()) {
             block.reset();
         }
     }
