@@ -8,15 +8,6 @@
 namespace snaps {
 
 namespace {
-bool TouchesFloor(const Grid& grid, const int x, const int y, const Block& block) {
-    if (not grid.InBounds(x, y+1)) return true;
-    const auto& below = grid.At(x, y+1);
-    return below.has_value()
-        and (block.WorldPosition.y + BLOCK_SIZE >= below->WorldPosition.y)
-        and below->Velocity.x == 0
-        and block.Velocity.y >= 0;
-}
-
 float MinVelocityForDistance(float deceleration, float distance = BLOCK_SIZE) {
     return std::sqrt(2.0f * deceleration * distance);
 }
@@ -60,11 +51,8 @@ void SnapsEngine::SimulatePhysics() {
 void SnapsEngine::SimulateMovement(const int x, const int y, Block& block) {
     if (block.IsDynamic) {
         ApplyGravity(block);
-        if (TouchesFloor(m_Grid, x, y, block)) {
-            ApplyFriction(block, 1.0f);
-        } else {
-            ApplyFriction(block, 0.0f); // drag
-        }
+        ApplyFriction(x, y, block);
+        ApplyDrag(block);
         Integrate(block);
     }
 }
@@ -338,27 +326,48 @@ void SnapsEngine::ApplyGravity(Block& block) {
     block.ForceAccum += Vector2{0.0f, m_Config.Gravity} * block.GravityScale / block.InvMass;
 }
 
-void SnapsEngine::ApplyFriction(Block& block, float multiplier) {
-    float speed = std::abs(block.Velocity.x) + block.ForceAccum.x * block.InvMass * m_DeltaTime;
-    if (speed <= 1e-6f) {
-        block.Velocity.x = 0;
+void SnapsEngine::ApplyFriction(const int x, const int y, Block& block) {
+    if (not m_Grid.InBounds(x, y+1)) return;
+
+    const auto& surface = m_Grid.At(x, y+1);
+    const bool isSliding = surface.has_value()                                // Block below must exist
+        and (block.WorldPosition.y + BLOCK_SIZE >= surface->WorldPosition.y)  // Blocks must be touching or overlapping
+        and surface->Velocity.x == 0                                          // Block below must be stationary in X
+        and block.Velocity.y >= 0;                                            // This I don't remember :D
+
+    if (isSliding) {
+        ApplyFrictionBetween(block, *surface);
+    }
+}
+
+void SnapsEngine::ApplyFrictionBetween(Block& block, const Block& surface) {
+    const float blockAcceleration = block.ForceAccum.x * block.InvMass;
+    const float blockFinalVelocity = block.Velocity.x + blockAcceleration * m_DeltaTime;
+    const float relativeVelocity = std::abs(blockFinalVelocity - surface.Velocity.x);
+    if (relativeVelocity <= 0.01f) {
+        block.Velocity.x = surface.Velocity.x;
         return;
     }
 
-    float dir = block.Velocity.x > 0 ? 1.0f : -1.0f;
-    float mass = 1.0f / block.InvMass;
+    const float dir = block.Velocity.x > 0 ? 1.0f : -1.0f;
+    const float mass = 1.0f / block.InvMass;
+    const float multiplier = std::sqrt(block.Friction * surface.Friction);
 
-    // Assume the gravity is already applied and it's directed downwards
-    float frictionForce = std::abs(block.ForceAccum.y) * multiplier * mass * dir;
+    // Assume the gravity is already applied
+    float frictionForce = std::max(block.ForceAccum.y, 0.0f) * multiplier * mass * dir;
 
     // Clamp: if this force would reverse velocity, zero it instead
-    float maxForce = mass * speed / m_DeltaTime;
+    const float maxForce = mass * relativeVelocity / m_DeltaTime;
     if (std::abs(frictionForce) > maxForce) {
         frictionForce = maxForce * dir;
         std::cout << "friction stopped the object" << std::endl;
     }
 
     block.ForceAccum.x -= frictionForce;
+}
+
+void SnapsEngine::ApplyDrag(Block& block) {
+    // TODO
 }
 
 }

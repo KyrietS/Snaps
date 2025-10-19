@@ -22,15 +22,19 @@ public:
     }
 
     std::optional<Block>& At(const int x, const int y) {
+        assert(InBounds(x, y));
         return m_Blocks[GetIndex(x, y)];
     }
     const std::optional<Block>& At(const int x, const int y) const {
+        assert(InBounds(x, y));
         return m_Blocks[GetIndex(x, y)];
     }
     std::optional<Block>& At(const std::size_t index) {
+        assert(index < m_Blocks.size());
         return m_Blocks[index];
     }
     const std::optional<Block>& At(const std::size_t index) const {
+        assert(index < m_Blocks.size());
         return m_Blocks[index];
     }
 

@@ -240,8 +240,8 @@ struct SlideTest : SceneTest {};
 TEST_F(SlideTest, SlideAndStopDueToFriction) {
     InitializeTestScene(10, 5);
     AddSand(2, 3);
-    GetBlock(2, 3).Friction = 0.5f;
-    snaps::ApplyImpulse(GetBlock(2, 3), {400.0f, 0.0f});
+    GetBlock(2, 3).Friction = 2.0f;
+    snaps::ApplyImpulse(GetBlock(2, 3), {500.0f, 0.0f});
 
     EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(2, 3));
     m_Scene->TickTime(0.7f);
@@ -288,9 +288,9 @@ TEST_F(SlideTest, SlideRightThreeBlocksNextToEachOther) {
     AddSand(2, 3);
     AddSand(3, 3);
     AddSand(4, 3);
-    GetBlock(2, 3).Friction = 0.5f;
-    GetBlock(3, 3).Friction = 0.5f;
-    GetBlock(4, 3).Friction = 0.5f;
+    GetBlock(2, 3).Friction = 1.0f;
+    GetBlock(3, 3).Friction = 1.0f;
+    GetBlock(4, 3).Friction = 1.0f;
     snaps::ApplyImpulse(GetBlock(2, 3), {400.0f, 0.0f});
     snaps::ApplyImpulse(GetBlock(3, 3), {400.0f, 0.0f});
     snaps::ApplyImpulse(GetBlock(4, 3), {400.0f, 0.0f});
@@ -314,9 +314,9 @@ TEST_F(SlideTest, SlideLeftThreeBlocksNextToEachOther) {
     AddSand(7, 3);
     AddSand(6, 3);
     AddSand(5, 3);
-    GetBlock(7, 3).Friction = 0.5f;
-    GetBlock(6, 3).Friction = 0.5f;
-    GetBlock(5, 3).Friction = 0.5f;
+    GetBlock(7, 3).Friction = 1.0f;
+    GetBlock(6, 3).Friction = 1.0f;
+    GetBlock(5, 3).Friction = 1.0f;
     snaps::ApplyImpulse(GetBlock(7, 3), {-400.0f, 0.0f});
     snaps::ApplyImpulse(GetBlock(6, 3), {-400.0f, 0.0f});
     snaps::ApplyImpulse(GetBlock(5, 3), {-400.0f, 0.0f});
@@ -681,11 +681,10 @@ TEST_F(FrictionTest, SlideWhenBottomBlockHasNoFriction) {
     }
     AddSand(1, 2);
     GetBlock(1, 2).Friction = 0.5f;
-    GetBlock(1, 2).Velocity.x = 50.0f;
+    GetBlock(1, 2).Velocity.x = 100.0f;
 
-    m_Scene->TickTime(1.0f);
-    // FIXME: friction value is not taken into account yet
-    // EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(6, 3)); // goes to the end
+    m_Scene->TickTime(1.2f);
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(8, 2)); // goes to the end
 }
 
 TEST_F(FrictionTest, SlideWhenUpperBlockHasNoFriction) {
@@ -695,11 +694,10 @@ TEST_F(FrictionTest, SlideWhenUpperBlockHasNoFriction) {
     }
     AddSand(1, 2);
     GetBlock(1, 2).Friction = 0.0f;
-    GetBlock(1, 2).Velocity.x = 50.0f;
+    GetBlock(1, 2).Velocity.x = 100.0f;
 
-    m_Scene->TickTime(1.0f);
-    // FIXME: friction value is not taken into account yet
-    // EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(6, 3)); // goes to the end
+    m_Scene->TickTime(1.2f);
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(8, 2)); // goes to the end
 }
 
 TEST_F(FrictionTest, NoFrictionWhenTwoBlocksAreSlidingOnEachOther) {
@@ -711,12 +709,12 @@ TEST_F(FrictionTest, NoFrictionWhenTwoBlocksAreSlidingOnEachOther) {
     AddSand(1, 3);
     GetBlock(1, 2).Friction = 0.5f;
     GetBlock(1, 3).Friction = 0.5f;
-    GetBlock(1, 2).Velocity.x = 200.0f;
-    GetBlock(1, 3).Velocity.x = 200.0f;
+    GetBlock(1, 2).Velocity.x = 100.0f;
+    GetBlock(1, 3).Velocity.x = 100.0f;
 
-    m_Scene->TickTime(1.0f);
-    // FIXME: friction value is not taken into account yet
-    // EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(6, 3)); // goes to the end
+    m_Scene->TickTime(1.2f);
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(8, 2));
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(8, 3));
 }
 
 struct BoundaryTest : SceneTest {

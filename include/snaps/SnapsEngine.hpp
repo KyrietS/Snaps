@@ -45,7 +45,9 @@ private:
     void SolveMovementDown(Block& block, MovementResolution&);
 
     void ApplyGravity(Block& block);
-    void ApplyFriction(Block& block, float multiplier);
+    void ApplyFriction(int x, int y, Block& block);
+    void ApplyFrictionBetween(Block& block, const Block& surface);
+    void ApplyDrag(Block& block);
 
     Grid& m_Grid;
 
