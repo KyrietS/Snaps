@@ -196,7 +196,7 @@ void SnapsEngine::SolveMovementRight(Block& block, MovementResolution& resolutio
     // Desired grid is occupied. Stop.
     if (wantsToMoveRight and blockRight.has_value()) {
         const bool blockRightIsMoving = blockRight->Velocity.x != 0 or blockRight->Velocity.y != 0;
-        if (blockRightIsMoving and resolution.CollisionPass == CollisionPass::First) { // Try in the second pass. If we are lucky, the block on
+        if (blockRightIsMoving and resolution.Pass == CollisionPass::First) { // Try in the second pass. If we are lucky, the block on
             m_RightMovementContacts.push({x, y});                               // the right will claim another block and release this one.
             resolution.Resolved = true;
         } else { // Stop.
@@ -300,7 +300,7 @@ void SnapsEngine::SolveMovementUp(Block& block, MovementResolution& resolution) 
     // Desired grid is occupied.
     if (wantsToMoveUp and blockAbove.has_value()) {
         const bool blockAboveIsMoving = blockAbove->Velocity.x != 0 or blockAbove->Velocity.y != 0;
-        if (blockAboveIsMoving and resolution.CollisionPass == CollisionPass::First) { // Try in the second pass. If we are lucky, the block above
+        if (blockAboveIsMoving and resolution.Pass == CollisionPass::First) { // Try in the second pass. If we are lucky, the block above
             m_UpMovementContacts.push({x, y});                                  // will claim another block and release this one.
             resolution.Resolved = true;
         } else { // Stop.

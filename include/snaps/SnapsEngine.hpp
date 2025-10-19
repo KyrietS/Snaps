@@ -29,10 +29,10 @@ private:
     void SecondPassGridPhysicsVertical();
 
     struct MovementResolution {
-        MovementResolution(const int x, const int y, CollisionPass pass) : X(x), Y(y), CollisionPass(pass) {}
+        MovementResolution(const int x, const int y, CollisionPass pass) : X(x), Y(y), Pass(pass) {}
         int X;
         int Y;
-        CollisionPass CollisionPass;
+        CollisionPass Pass;
         bool Resolved = false;
     };
 
