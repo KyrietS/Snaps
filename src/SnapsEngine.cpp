@@ -122,10 +122,10 @@ void SnapsEngine::SolveMovementHorizontal(Block& block, MovementResolution& reso
 }
 
 void SnapsEngine::SolveMovementVertical(Block& block, MovementResolution& resolution) {
-    if (block.Velocity.y >= 0)
-        SolveMovementDown(block, resolution);
-    else
+    if (block.Velocity.y <= 0)
         SolveMovementUp(block, resolution);
+    else
+        SolveMovementDown(block, resolution);
 }
 
 void SnapsEngine::SolveMovementLeft(Block& block, MovementResolution& resolution) {
@@ -178,32 +178,34 @@ void SnapsEngine::SolveMovementRight(Block& block, MovementResolution& resolutio
     // Block is not moving right
     if (block.Velocity.x < 0) return; // moving left
 
-    // No blocks to the right
-    if (not m_Grid.InBounds(x+1, y)) { // at right edge of grid
-        block.Velocity = {0, 0};
-        return;
-    }
-
     const int desiredXGrid = static_cast<int>(block.WorldPosition.x + BLOCK_SIZE) / BLOCK_SIZE;
-    auto& blockRight = m_Grid.At(x + 1, y);
     const bool wantsToMoveRight = desiredXGrid > x and block.Velocity.x > 0;
-    const float deceleration = block.Acceleration.x < 0 ? -block.Acceleration.x : 0.0f;
 
-    // Desired grid is occupied. Stop.
-    if (wantsToMoveRight and blockRight.has_value()) {
-        const bool blockRightIsMoving = blockRight->Velocity.x != 0 or blockRight->Velocity.y != 0;
-        if (blockRightIsMoving and resolution.CollisionPass == CollisionPass::First) {
-            // Try to solve in the second pass
-            m_RightMovementContacts.push({x, y});
-            resolution.Resolved = true;
-        } else {
+    // No blocks to the right
+    if (not m_Grid.InBounds(x+1, y)) {
+        if (wantsToMoveRight) {
             block.WorldPosition.x = static_cast<float>(x) * BLOCK_SIZE;
             block.Velocity.x = 0;
         }
         return;
     }
 
-    // [DECELERATION ONLY]
+    auto& blockRight = m_Grid.At(x + 1, y);
+    const float deceleration = block.Acceleration.x < 0 ? -block.Acceleration.x : 0.0f;
+
+    // Desired grid is occupied. Stop.
+    if (wantsToMoveRight and blockRight.has_value()) {
+        const bool blockRightIsMoving = blockRight->Velocity.x != 0 or blockRight->Velocity.y != 0;
+        if (blockRightIsMoving and resolution.CollisionPass == CollisionPass::First) { // Try in the second pass. If we are lucky, the block on
+            m_RightMovementContacts.push({x, y});                               // the right will claim another block and release this one.
+            resolution.Resolved = true;
+        } else { // Stop.
+            block.WorldPosition.x = static_cast<float>(x) * BLOCK_SIZE;
+            block.Velocity.x = 0;
+        }
+        return;
+    }
+
     // Desired grid is free. Claim it if we have enough velocity to reach it.
     if (wantsToMoveRight and not blockRight.has_value()) {
         const float minVelocityToReachNextGrid = std::sqrt(2.0f * deceleration * BLOCK_SIZE);
@@ -233,18 +235,23 @@ void SnapsEngine::SolveMovementRight(Block& block, MovementResolution& resolutio
 void SnapsEngine::SolveMovementDown(Block& block, MovementResolution& resolution) {
     const int x = resolution.X;
     const int y = resolution.Y;
+
     // Block is not moving down
-    if (block.Velocity.y < 0) return;
+    if (block.Velocity.y <= 0) return;
+
+    const int desiredYGrid = static_cast<int>(block.WorldPosition.y + BLOCK_SIZE) / BLOCK_SIZE;
+    const bool wantsToMoveDown = desiredYGrid > y;
 
     // No block below
     if (not m_Grid.InBounds(x, y+1)) {
-        block.Velocity = {0, 0};
+        if (wantsToMoveDown) {
+            block.WorldPosition.y = static_cast<float>(y) * BLOCK_SIZE;
+            block.Velocity.y = 0;
+        }
         return;
     }
 
-    const int desiredYGrid = static_cast<int>(block.WorldPosition.y + BLOCK_SIZE) / BLOCK_SIZE;
     auto& blockBelow = m_Grid.At(x, y+1);
-    const bool wantsToMoveDown = desiredYGrid > y;
 
     // Desired grid is occupied. Stop.
     if (wantsToMoveDown and blockBelow.has_value()) {
@@ -274,25 +281,29 @@ void SnapsEngine::SolveMovementUp(Block& block, MovementResolution& resolution) 
     const int x = resolution.X;
     const int y = resolution.Y;
     // Block is not moving up
-    if (block.Velocity.y >= 0) return; // moving down
+    if (block.Velocity.y > 0) return; // moving down
+
+    const int desiredYGrid = std::floor(block.WorldPosition.y / BLOCK_SIZE);
+    const bool wantsToMoveUp = desiredYGrid < y;
 
     // No blocks above
-    if (not m_Grid.InBounds(x, y-1)) { // at bottom of grid
-        block.Velocity = {0, 0};
+    if (not m_Grid.InBounds(x, y-1)) {
+        if (wantsToMoveUp) {
+            block.WorldPosition.y = static_cast<float>(y) * BLOCK_SIZE;
+            block.Velocity.y = 0.0f;;
+        }
         return;
     }
 
-    const int desiredYGrid = static_cast<int>(block.WorldPosition.y) / BLOCK_SIZE;
     auto& blockAbove = m_Grid.At(x, y - 1);
-    const bool wantsToMoveUp = desiredYGrid < y;
 
-    // Desired grid is occupied. Stop.
+    // Desired grid is occupied.
     if (wantsToMoveUp and blockAbove.has_value()) {
         const bool blockAboveIsMoving = blockAbove->Velocity.x != 0 or blockAbove->Velocity.y != 0;
-        if (blockAboveIsMoving and resolution.CollisionPass == CollisionPass::First) {
-            m_UpMovementContacts.push({x, y});
+        if (blockAboveIsMoving and resolution.CollisionPass == CollisionPass::First) { // Try in the second pass. If we are lucky, the block above
+            m_UpMovementContacts.push({x, y});                                  // will claim another block and release this one.
             resolution.Resolved = true;
-        } else {
+        } else { // Stop.
             block.WorldPosition.y = static_cast<float>(y) * BLOCK_SIZE;
             block.Velocity.y = 0;
         }
