@@ -732,10 +732,10 @@ TEST_F(BoundaryTest, BlockStopsAtLeftBoundary) {
     AddWall(0, 4);
     AddWall(1, 4);
     AddWall(2, 4);
-    AddSand(2, 3);
-    GetBlock(2, 3).Velocity.x = -400.0f;
+    AddSand(1, 1);
+    GetBlock(1, 1).Velocity.x = -50.0f;
 
-    m_Scene->TickTime(0.5f);
+    m_Scene->TickTime(0.7f);
     EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(0, 3));
     EXPECT_SCENE(m_Scene, check::BlockIsNotMovingAt(0, 3));
 }
@@ -744,30 +744,31 @@ TEST_F(BoundaryTest, BlockStopsAtRightBoundary) {
     AddWall(4, 4);
     AddWall(3, 4);
     AddWall(2, 4);
-    AddSand(2, 3);
-    GetBlock(2, 3).Velocity.x = +400.0f;
+    AddSand(3, 1);
+    GetBlock(3, 1).Velocity.x = +50.0f;
 
-    m_Scene->TickTime(0.5f);
+    m_Scene->TickTime(0.7f);
     EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(4, 3));
     EXPECT_SCENE(m_Scene, check::BlockIsNotMovingAt(4, 3));
 }
 
 TEST_F(BoundaryTest, BlockStopsAtTopBoundary) {
     AddWall(2, 4);
-    AddSand(2, 3);
-    GetBlock(2, 3).Velocity.y = -600.0f;
+    AddSand(2, 2);
+    GetBlock(2, 2).Velocity = {50.0f, -100.0f};
 
     m_Engine->GetConfig().Gravity = 0.0f;
     m_Scene->TickTime(0.8f);
-    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(2, 0));
-    EXPECT_SCENE(m_Scene, check::BlockIsNotMovingAt(2, 0));
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(4, 0));
+    EXPECT_SCENE(m_Scene, check::BlockIsNotMovingAt(4, 0));
 }
 
 TEST_F(BoundaryTest, BlockStopsAtBottomBoundary) {
     AddSand(2, 2);
-    GetBlock(2, 2).Velocity.y = +100.0f;
+    GetBlock(2, 2).Velocity = {50.0f, 100.0f};
 
-    m_Scene->TickTime(0.5f);
-    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(2, 4));
-    EXPECT_SCENE(m_Scene, check::BlockIsNotMovingAt(2, 4));
+    m_Engine->GetConfig().Gravity = 0.0f;
+    m_Scene->TickTime(0.7f);
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(4, 4));
+    EXPECT_SCENE(m_Scene, check::BlockIsNotMovingAt(4, 4));
 }
