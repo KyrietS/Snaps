@@ -147,6 +147,15 @@ TEST_F(BasicSceneTest, BlockStoppedMidTileShouldBeAligned) {
     EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(finalPosX, finalPosY));
 }
 
+TEST_F(BasicSceneTest, BlockSlightlyPushedInTheAirLandMidTile) {
+    InitializeTestScene(5, 5);
+    AddWall(3, 3);
+    AddSand(3, 1);
+    GetBlock(3, 1).Velocity.x = -10.0f;
+
+    m_Scene->TickTime(2.0f);
+}
+
 struct ImpulseTest : SceneTest {};
 
 TEST_F(ImpulseTest, ImpulseTooWeakToSlideDueToFriction) {

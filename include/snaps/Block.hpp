@@ -20,13 +20,17 @@ struct Block {
 
     // ----- Read only -----
 
-    // Acceleration calculated each from ForceAccum. Do not set manually.
+    // Acceleration calculated after each step from ForceAccum. Do not set manually.
     Vector2 Acceleration = {0, 0};
 
     // Set during a physics step. All bodies that have moved need collision resolution.
     bool NeedsCollisionResolution = false;
 };
 
+/**
+ * Adds force to be applied for the next simulation step. If you want to achieve constant force
+ * you must call this function on every physics update
+ */
 inline void AddForce(Block& block, const Vector2 force) {
     block.ForceAccum += force;
 }
@@ -34,8 +38,6 @@ inline void AddForce(Block& block, const Vector2 force) {
 /**
  * Applies an impulse force to the block, changing its velocity immediately.
  * The impulse is scaled by the block's mass so that heavier blocks need stronger impulse to move.
- * @param block the block to apply the impulse to
- * @param impulse the impulse vector to apply, this is a force
  */
 inline void ApplyImpulse(Block& block, const Vector2 impulse) {
     block.Velocity += impulse * block.InvMass;

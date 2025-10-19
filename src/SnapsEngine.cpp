@@ -53,6 +53,7 @@ void SnapsEngine::SimulateMovement(const int x, const int y, Block& block) {
         ApplyGravity(block);
         ApplyFriction(x, y, block);
         ApplyDrag(block);
+        DiscardForcesIfNecessary(x, y, block);
         Integrate(block);
     }
 }
@@ -308,7 +309,7 @@ void SnapsEngine::SolveMovementUp(Block& block, MovementResolution& resolution) 
         // More accurate check if next grid is reachable
         // const float distanceToReachNextGrid = block.WorldPosition.y - desiredYGrid * BOX_SIZE;
         // const float minVelocityToReachNextGrid = std::sqrt(2.0f * GRAVITY * distanceToReachNextGrid);
-        const float deceleration = m_Config.Gravity; // FIXME: This might not be the only source of deceleration
+        const float deceleration = block.Acceleration.y > 0 ? block.Acceleration.y : 0.0f;
         const float minVelocityToReachNextGrid = MinVelocityForDistance(deceleration);
 
         // Not enough velocity to reach next grid. Stop.
@@ -395,4 +396,35 @@ void SnapsEngine::ApplyDrag(Block& block) {
     block.ForceAccum -= dragForce;
 }
 
+void SnapsEngine::DiscardForcesIfNecessary(int x, int y, Block& block) {
+    const int alignedX = x * BLOCK_SIZE;
+    const float distance = block.WorldPosition.x - static_cast<float>(alignedX);
+    if (std::abs(distance) == 0) return;
+
+    const float deceleration = block.ForceAccum.x * block.InvMass;
+
+    std::cout << "distance: " << distance << std::endl;
+    std::cout << "deceleration: " << deceleration << std::endl;
+    const float minVelocityToReachNextGrid = MinVelocityForDistance(deceleration, distance);
+    std::cout << "minVelocityToReachNextGrid: " << minVelocityToReachNextGrid << std::endl;
+    std::cout << "velocity x: " << block.Velocity.x << std::endl;
+    std::cout << "-----" << std::endl;
+
+    // Overshoot
+    const float velocity = block.Velocity.x - deceleration * m_DeltaTime;
+    const float finalX = block.WorldPosition.x + velocity * m_DeltaTime;
+    const int finalXGrid = static_cast<int>(finalX) / BLOCK_SIZE;
+    if (finalXGrid != x) {
+        // block.Velocity.x = 0;
+        return;
+    }
+
+    // Undershoot
+    if (std::abs(block.Velocity.x) < minVelocityToReachNextGrid) {
+        // Discard deceleration force because if left it would stop the block mid-tile
+        // not reaching the end of the tile. So we allow smooth sliding to the end with
+        // no deceleration (friction, drag, etc.)
+        block.ForceAccum.x = 0;
+    }
+}
 }

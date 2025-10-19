@@ -40,14 +40,15 @@ private:
     void SolveMovementRight(Block&, MovementResolution&);
     void SolveMovementLeft(Block&, MovementResolution&);
 
-    void SolveMovementVertical(Block& block, MovementResolution&);
-    void SolveMovementUp(Block& block, MovementResolution&);
-    void SolveMovementDown(Block& block, MovementResolution&);
+    void SolveMovementVertical(Block&, MovementResolution&);
+    void SolveMovementUp(Block&, MovementResolution&);
+    void SolveMovementDown(Block&, MovementResolution&);
 
     void ApplyGravity(Block& block);
     void ApplyFriction(int x, int y, Block& block);
     void ApplyFrictionBetween(Block& block, const Block& surface);
     void ApplyDrag(Block& block);
+    void DiscardForcesIfNecessary(int x, int y, Block& block);
 
     Grid& m_Grid;
 
