@@ -33,6 +33,11 @@ void SceneTest::InitializeTestScene(const int gridWidth, const int gridHeight) {
     m_Grid = std::make_unique<snaps::Grid>(MakeTestGrid(gridWidth, gridHeight));
     m_Engine = std::make_unique<snaps::SnapsEngine>(*m_Grid);
     m_Scene = std::make_unique<TestScene>(*m_Engine, *m_Grid);
+
+    m_Engine->GetConfig() = snaps::Config {
+        .Gravity = 200.0f,
+        .Drag = 0.0f,
+    };
 }
 
 void SceneTest::TearDown() {

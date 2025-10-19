@@ -367,7 +367,32 @@ void SnapsEngine::ApplyFrictionBetween(Block& block, const Block& surface) {
 }
 
 void SnapsEngine::ApplyDrag(Block& block) {
-    // TODO
+    if (block.InvMass <= 0.0f) return;
+    if (m_Config.Drag <= 0.0f) return;
+
+    // If the block is almost stationary, skip to avoid tiny forces
+    if (std::abs(block.Velocity.x) < 0.01f and std::abs(block.Velocity.y) < 0.01) return;
+
+    Vector2 dragForce = block.Velocity * m_Config.Drag;
+
+    const float blockAcceleration = block.ForceAccum.x * block.InvMass;
+    const float blockFinalVelocity = block.Velocity.x + blockAcceleration * m_DeltaTime;
+    const float mass = 1.0f / block.InvMass;
+    const float maxForce = mass * blockFinalVelocity / m_DeltaTime;
+    if (std::abs(dragForce.x) > std::abs(maxForce)) {
+        dragForce.x = maxForce;
+        std::cout << "drag stopped the object" << std::endl;
+    }
+
+    // Don't apply drag for slow objects to reduce snapping.
+    if (std::abs(block.Velocity.x) < 1 / m_DeltaTime) {
+        dragForce.x = 0;
+    }
+    if (std::abs(block.Velocity.y) < 1 / m_DeltaTime) {
+        dragForce.y = 0;
+    }
+
+    block.ForceAccum -= dragForce;
 }
 
 }

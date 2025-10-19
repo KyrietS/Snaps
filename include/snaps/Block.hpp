@@ -15,7 +15,6 @@ struct Block {
 
     float InvMass = 0.5f;
     Vector2 ForceAccum = {0, 0};
-    float LinearDamping = 0.0f;
     float Friction = 1.0f;
     float GravityScale = 1.0f;
 

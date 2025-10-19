@@ -7,7 +7,7 @@ namespace snaps {
 
 struct Config {
     float Gravity = 200.0f;
-    float Drag = 0.0f; // For now
+    float Drag = 0.2f;
 };
 
 class SnapsEngine {
