@@ -53,7 +53,7 @@ void SnapsEngine::SimulateMovement(const int x, const int y, Block& block) {
         ApplyGravity(block);
         ApplyFriction(x, y, block);
         ApplyDrag(block);
-        DiscardForcesIfNecessary(x, y, block);
+        DiscardResistanceForcesIfNecessary(x, y, block);
         Integrate(block);
     }
 }
@@ -223,9 +223,9 @@ void SnapsEngine::SolveMovementRight(Block& block, MovementResolution& resolutio
     }
 
     // ALIGN POSITION TO GRID IF NECESSARY
-    const int distanceFromCorrectPosition = static_cast<int>(static_cast<float>(x * BLOCK_SIZE) - block.WorldPosition.x);
+    const float distanceFromCorrectPosition = static_cast<float>(x * BLOCK_SIZE) - block.WorldPosition.x;
     // Block stopped before reaching end of its own grid.
-    if (block.Velocity.x == 0 and block.Acceleration.x == 0 and distanceFromCorrectPosition != 0) {
+    if (block.Velocity.x == 0 and block.Acceleration.x == 0 and distanceFromCorrectPosition != 0.0f) {
         std::cout << "block stopped without reaching end of its own grid\n";
         // Snap it to the grid in one shot.
         StopBlockAndAlignToX(block, x);
@@ -396,34 +396,31 @@ void SnapsEngine::ApplyDrag(Block& block) {
     block.ForceAccum -= dragForce;
 }
 
-void SnapsEngine::DiscardForcesIfNecessary(int x, int y, Block& block) {
+// FIXME: Optimisation idea: instead of calculating finalX here and other things in applyGravity/Drag
+//        I could apply just velocity (without acceleration) and then decide whether I should apply
+//        resistance forces and how much. Only after that I would apply the forces by adding them to
+//        velocity and then to position.
+void SnapsEngine::DiscardResistanceForcesIfNecessary(int x, int y, Block& block) {
     const int alignedX = x * BLOCK_SIZE;
-    const float distance = block.WorldPosition.x - static_cast<float>(alignedX);
+    const float distance = static_cast<float>(alignedX) - block.WorldPosition.x;
     if (std::abs(distance) == 0) return;
 
-    const float deceleration = block.ForceAccum.x * block.InvMass;
+    // Calculate a final position as if deceleration was discarded and check
+    // if a block will overshoot the current tile (reach the end)
+    const float finalX = block.WorldPosition.x + block.Velocity.x * m_DeltaTime;
+    const bool movingRight = block.Velocity.x > 0;
+    const float offset = movingRight ? BLOCK_SIZE : 0;
+    const int finalXGrid = static_cast<int>(finalX + offset) / BLOCK_SIZE;
+    if (finalXGrid != x) return;
 
-    std::cout << "distance: " << distance << std::endl;
-    std::cout << "deceleration: " << deceleration << std::endl;
+    const float deceleration = -block.ForceAccum.x * block.InvMass;
     const float minVelocityToReachNextGrid = MinVelocityForDistance(deceleration, distance);
-    std::cout << "minVelocityToReachNextGrid: " << minVelocityToReachNextGrid << std::endl;
-    std::cout << "velocity x: " << block.Velocity.x << std::endl;
-    std::cout << "-----" << std::endl;
 
-    // Overshoot
-    const float velocity = block.Velocity.x - deceleration * m_DeltaTime;
-    const float finalX = block.WorldPosition.x + velocity * m_DeltaTime;
-    const int finalXGrid = static_cast<int>(finalX) / BLOCK_SIZE;
-    if (finalXGrid != x) {
-        // block.Velocity.x = 0;
-        return;
-    }
-
-    // Undershoot
+    // Block is too slow to reach the end of a tile assuming deceleration will be constant.
     if (std::abs(block.Velocity.x) < minVelocityToReachNextGrid) {
         // Discard deceleration force because if left it would stop the block mid-tile
         // not reaching the end of the tile. So we allow smooth sliding to the end with
-        // no deceleration (friction, drag, etc.)
+        // no deceleration (friction, drag, et}c.)
         block.ForceAccum.x = 0;
     }
 }

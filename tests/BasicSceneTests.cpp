@@ -147,13 +147,54 @@ TEST_F(BasicSceneTest, BlockStoppedMidTileShouldBeAligned) {
     EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(finalPosX, finalPosY));
 }
 
-TEST_F(BasicSceneTest, BlockSlightlyPushedInTheAirLandMidTile) {
+TEST_F(BasicSceneTest, BlockSlidesLeftWithFrictionBeingDiscarded) {
+    InitializeTestScene(5, 5);
+    AddSand(3, 1);
+    GetBlock(3, 1).Velocity.x = -10.0f;
+
+    m_Scene->TickTime(0.75f);
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingLeftAt(2, 3));
+    EXPECT_SCENE(m_Scene, check::BlockIsYAlignedAt(2, 3));
+    EXPECT_SCENE(m_Scene, check::BlockVelocityAt(2, 3, Vector2{-10.0f, 0.0f}));
+
+    m_Scene->TickTime(0.5f);
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingLeftAt(2, 3));
+    EXPECT_SCENE(m_Scene, check::BlockIsYAlignedAt(2, 3));
+    EXPECT_SCENE(m_Scene, check::BlockVelocityAt(2, 3, Vector2{-10.0f, 0.0f}));
+
+    m_Scene->TickTime(0.5f);
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(2, 3));
+    EXPECT_SCENE(m_Scene, check::BlockIsNotMovingAt(2, 3));
+}
+
+TEST_F(BasicSceneTest, BlockSlidesRightWithFrictionBeingDiscarded) {
+    InitializeTestScene(5, 5);
+    AddSand(1, 1);
+    GetBlock(1, 1).Velocity.x = +10.0f;
+
+    m_Scene->TickTime(0.75f);
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingRightAt(2, 3));
+    EXPECT_SCENE(m_Scene, check::BlockIsYAlignedAt(2, 3));
+    EXPECT_SCENE(m_Scene, check::BlockVelocityAt(2, 3, Vector2{+10.0f, 0.0f}));
+
+    m_Scene->TickTime(0.5f);
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingRightAt(2, 3));
+    EXPECT_SCENE(m_Scene, check::BlockIsYAlignedAt(2, 3));
+    EXPECT_SCENE(m_Scene, check::BlockVelocityAt(2, 3, Vector2{+10.0f, 0.0f}));
+
+    m_Scene->TickTime(0.5f);
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(2, 3));
+    EXPECT_SCENE(m_Scene, check::BlockIsNotMovingAt(2, 3));
+}
+
+TEST_F(BasicSceneTest, BlockSlowlySlidesLeftOverTheEdge) {
     InitializeTestScene(5, 5);
     AddWall(3, 3);
     AddSand(3, 1);
     GetBlock(3, 1).Velocity.x = -10.0f;
 
     m_Scene->TickTime(2.0f);
+    // TODO: To be implemented...
 }
 
 struct ImpulseTest : SceneTest {};
@@ -521,7 +562,7 @@ TEST_F(EdgeTest, GoOverTheEdgeGoingRightAndDown) {
     GetBlock(4, 1).Velocity.x = 10.0f;
 
     m_Scene->TickTime(1.0f);
-    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(5, 6));
+    EXPECT_SCENE(m_Scene, check::BlockIsYAlignedAt(5, 6));
 }
 
 TEST_F(EdgeTest, GoOverTheEdgeGoingLeftAndDown) {
@@ -529,7 +570,7 @@ TEST_F(EdgeTest, GoOverTheEdgeGoingLeftAndDown) {
     GetBlock(3, 1).Velocity.x = -10.0f;
 
     m_Scene->TickTime(1.0f);
-    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(2, 6));
+    EXPECT_SCENE(m_Scene, check::BlockIsYAlignedAt(2, 6));
 }
 
 TEST_F(EdgeTest, GoOverTheEdgeGoingRightAndUp) {

@@ -126,6 +126,13 @@ MATCHER_P(IsXAligned, x, std::format("is{} X-aligned to ({}, _)", (negation ? " 
 inline auto BlockIsXAlignedAt(const int gridX, const int gridY) {
     return Block(gridX, gridY, IsXAligned(gridX * snaps::BLOCK_SIZE));
 }
+MATCHER_P(IsYAligned, y, std::format("is{} Y-aligned to (_, {})", (negation ? " not" : ""), y)) {
+    const float expectedXPos = static_cast<float>(y);
+    return arg.WorldPosition.y == expectedXPos;
+}
+inline auto BlockIsYAlignedAt(const int gridX, const int gridY) {
+    return Block(gridX, gridY, IsYAligned(gridY * snaps::BLOCK_SIZE));
+}
 
 inline testing::Matcher<Vector2> Vector(const testing::Matcher<float>& x, const testing::Matcher<float>& y) {
     return testing::AllOf(

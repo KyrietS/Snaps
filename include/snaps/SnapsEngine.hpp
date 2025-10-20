@@ -48,7 +48,7 @@ private:
     void ApplyFriction(int x, int y, Block& block);
     void ApplyFrictionBetween(Block& block, const Block& surface);
     void ApplyDrag(Block& block);
-    void DiscardForcesIfNecessary(int x, int y, Block& block);
+    void DiscardResistanceForcesIfNecessary(int x, int y, Block& block);
 
     Grid& m_Grid;
 
