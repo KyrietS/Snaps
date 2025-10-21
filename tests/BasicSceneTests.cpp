@@ -211,7 +211,7 @@ TEST_F(SmoothSliding, BlockSlidesLeftToTheEdgeWithFrictionBeingDiscarded) {
     EXPECT_SCENE(m_Scene, check::BlockIsNotMovingAt(3, 4));
 }
 
-TEST_F(SmoothSliding, BlockSlidesSlowerThanLimitIsAccelerated) {
+TEST_F(SmoothSliding, BlockSlidesLeftSlowerThanLimitIsAccelerated) {
     InitializeTestScene(5, 5);
     AddSand(3, 1);
     GetBlock(3, 1).Velocity.x = -1.0f;
@@ -219,6 +219,20 @@ TEST_F(SmoothSliding, BlockSlidesSlowerThanLimitIsAccelerated) {
     m_Scene->TickTime(0.75f);
     EXPECT_SCENE(m_Scene, check::BlockIsYAlignedAt(2, 3));
     EXPECT_SCENE(m_Scene, check::BlockVelocityAt(2, 3, Vector2{-m_Engine->GetConfig().SmoothSnappingMinVelocity, 0.0f}));
+
+    m_Scene->TickTime(1.5f);
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(2, 3));
+    EXPECT_SCENE(m_Scene, check::BlockIsNotMovingAt(2, 3));
+}
+
+TEST_F(SmoothSliding, BlockSlidesRightSlowerThanLimitIsAccelerated) {
+    InitializeTestScene(5, 5);
+    AddSand(1, 1);
+    GetBlock(1, 1).Velocity.x = +1.0f;
+
+    m_Scene->TickTime(0.75f);
+    EXPECT_SCENE(m_Scene, check::BlockIsYAlignedAt(2, 3));
+    EXPECT_SCENE(m_Scene, check::BlockVelocityAt(2, 3, Vector2{m_Engine->GetConfig().SmoothSnappingMinVelocity, 0.0f}));
 
     m_Scene->TickTime(1.5f);
     EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(2, 3));
