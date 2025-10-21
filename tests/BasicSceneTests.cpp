@@ -187,6 +187,28 @@ TEST_F(BasicSceneTest, BlockSlidesRightWithFrictionBeingDiscarded) {
     EXPECT_SCENE(m_Scene, check::BlockIsNotMovingAt(2, 3));
 }
 
+TEST_F(BasicSceneTest, BlockSlidesRightToTheEdgeWithFrictionBeingDiscarded) {
+    InitializeTestScene(6, 8);
+    AddWall(2, 5);
+    AddSand(1, 1);
+    GetBlock(1, 1).Velocity.x = +10.0f;
+
+    m_Scene->TickTime(2.5f);
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(2, 4));
+    EXPECT_SCENE(m_Scene, check::BlockIsNotMovingAt(2, 4));
+}
+
+TEST_F(BasicSceneTest, BlockSlidesLeftToTheEdgeWithFrictionBeingDiscarded) {
+    InitializeTestScene(6, 8);
+    AddWall(3, 5);
+    AddSand(4, 1);
+    GetBlock(4, 1).Velocity.x = -10.0f;
+
+    m_Scene->TickTime(2.5f);
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(3, 4));
+    EXPECT_SCENE(m_Scene, check::BlockIsNotMovingAt(3, 4));
+}
+
 TEST_F(BasicSceneTest, BlockSlowlySlidesLeftOverTheEdge) {
     InitializeTestScene(5, 5);
     AddWall(3, 3);
