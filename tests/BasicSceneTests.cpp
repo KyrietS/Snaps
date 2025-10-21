@@ -147,7 +147,9 @@ TEST_F(BasicSceneTest, BlockStoppedMidTileShouldBeAligned) {
     EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(finalPosX, finalPosY));
 }
 
-TEST_F(BasicSceneTest, BlockSlidesLeftWithFrictionBeingDiscarded) {
+struct SmoothSliding : SceneTest {};
+
+TEST_F(SmoothSliding, BlockSlidesLeftWithFrictionBeingDiscarded) {
     InitializeTestScene(5, 5);
     AddSand(3, 1);
     GetBlock(3, 1).Velocity.x = -10.0f;
@@ -167,7 +169,7 @@ TEST_F(BasicSceneTest, BlockSlidesLeftWithFrictionBeingDiscarded) {
     EXPECT_SCENE(m_Scene, check::BlockIsNotMovingAt(2, 3));
 }
 
-TEST_F(BasicSceneTest, BlockSlidesRightWithFrictionBeingDiscarded) {
+TEST_F(SmoothSliding, BlockSlidesRightWithFrictionBeingDiscarded) {
     InitializeTestScene(5, 5);
     AddSand(1, 1);
     GetBlock(1, 1).Velocity.x = +10.0f;
@@ -187,7 +189,7 @@ TEST_F(BasicSceneTest, BlockSlidesRightWithFrictionBeingDiscarded) {
     EXPECT_SCENE(m_Scene, check::BlockIsNotMovingAt(2, 3));
 }
 
-TEST_F(BasicSceneTest, BlockSlidesRightToTheEdgeWithFrictionBeingDiscarded) {
+TEST_F(SmoothSliding, BlockSlidesRightToTheEdgeWithFrictionBeingDiscarded) {
     InitializeTestScene(6, 8);
     AddWall(2, 5);
     AddSand(1, 1);
@@ -198,7 +200,7 @@ TEST_F(BasicSceneTest, BlockSlidesRightToTheEdgeWithFrictionBeingDiscarded) {
     EXPECT_SCENE(m_Scene, check::BlockIsNotMovingAt(2, 4));
 }
 
-TEST_F(BasicSceneTest, BlockSlidesLeftToTheEdgeWithFrictionBeingDiscarded) {
+TEST_F(SmoothSliding, BlockSlidesLeftToTheEdgeWithFrictionBeingDiscarded) {
     InitializeTestScene(6, 8);
     AddWall(3, 5);
     AddSand(4, 1);
@@ -209,7 +211,21 @@ TEST_F(BasicSceneTest, BlockSlidesLeftToTheEdgeWithFrictionBeingDiscarded) {
     EXPECT_SCENE(m_Scene, check::BlockIsNotMovingAt(3, 4));
 }
 
-TEST_F(BasicSceneTest, BlockSlowlySlidesLeftOverTheEdge) {
+TEST_F(SmoothSliding, BlockSlidesSlowerThanLimitIsAccelerated) {
+    InitializeTestScene(5, 5);
+    AddSand(3, 1);
+    GetBlock(3, 1).Velocity.x = -1.0f;
+
+    m_Scene->TickTime(0.75f);
+    EXPECT_SCENE(m_Scene, check::BlockIsYAlignedAt(2, 3));
+    EXPECT_SCENE(m_Scene, check::BlockVelocityAt(2, 3, Vector2{-m_Engine->GetConfig().SmoothSnappingMinVelocity, 0.0f}));
+
+    m_Scene->TickTime(1.5f);
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(2, 3));
+    EXPECT_SCENE(m_Scene, check::BlockIsNotMovingAt(2, 3));
+}
+
+TEST_F(SmoothSliding, BlockSlowlySlidesLeftOverTheEdge) {
     InitializeTestScene(5, 5);
     AddWall(3, 3);
     AddSand(3, 1);

@@ -401,13 +401,15 @@ void SnapsEngine::ApplyDrag(Block& block) {
 //        resistance forces and how much. Only after that I would apply the forces by adding them to
 //        velocity and then to position.
 void SnapsEngine::DiscardResistanceForcesIfNecessary(int x, int y, Block& block) {
+    const float minSlidingVelocity = m_Config.SmoothSnappingMinVelocity;
     const int alignedX = x * BLOCK_SIZE;
     const float distance = static_cast<float>(alignedX) - block.WorldPosition.x;
     if (std::abs(distance) == 0) return;
 
     // Calculate a final position as if deceleration was discarded and check
     // if a block will overshoot the current tile (reach the end)
-    const float finalX = block.WorldPosition.x + block.Velocity.x * m_DeltaTime;
+    const float targetVelocityX = std::copysign(std::max(minSlidingVelocity, std::abs(block.Velocity.x)), block.Velocity.x);
+    const float finalX = block.WorldPosition.x + targetVelocityX * m_DeltaTime;
     const bool movingRight = block.Velocity.x > 0;
     const float offset = movingRight ? BLOCK_SIZE : 0;
     const int finalXGrid = static_cast<int>(finalX + offset) / BLOCK_SIZE;
@@ -422,6 +424,11 @@ void SnapsEngine::DiscardResistanceForcesIfNecessary(int x, int y, Block& block)
         // not reaching the end of the tile. So we allow smooth sliding to the end with
         // no deceleration (friction, drag, et}c.)
         block.ForceAccum.x = 0;
+
+        // If block is super slow, then we can speed it up
+        if (std::abs(block.Velocity.x) < minSlidingVelocity) {
+            block.Velocity.x = std::copysign(minSlidingVelocity, block.Velocity.x);
+        }
     }
 }
 }

@@ -8,6 +8,7 @@ namespace snaps {
 struct Config {
     float Gravity = 200.0f;
     float Drag = 0.2f;
+    float SmoothSnappingMinVelocity = 10.0f;
 };
 
 class SnapsEngine {
