@@ -260,6 +260,16 @@ void SnapsEngine::SolveMovementDown(Block& block, MovementResolution& resolution
 
     // Desired grid is free, claim it. Assume we will always have enough velocity to reach it due to gravity.
     if (wantsToMoveDown and not blockBelow.has_value()) {
+        // Claim block below only if center of the block can reach it
+        // We basically slide the block horizontally until its center point does not exceed the edge.
+        const float blockCenterX = block.WorldPosition.x + BLOCK_SIZE / 2;
+        const int blockCenterXGrid = std::floor(blockCenterX / BLOCK_SIZE);
+        const auto& blockBelowCenter = blockCenterXGrid == x ? blockBelow : m_Grid.At(blockCenterXGrid, y+1);
+        if (blockBelowCenter.has_value()) {
+            StopBlockAndAlignToY(block, y);
+            return;
+        }
+
         blockBelow = block;
         m_Grid.Remove(x, y);
         resolution.Y += 1;
@@ -306,6 +316,16 @@ void SnapsEngine::SolveMovementUp(Block& block, MovementResolution& resolution) 
 
     // Desired grid is free. Claim it if we have enough velocity to reach it.
     if (wantsToMoveUp and not blockAbove.has_value()) {
+        // Claim block above only if center of the block can reach it
+        // We basically slide the block horizontally until its center point does not exceed the edge.
+        const float blockCenterX = block.WorldPosition.x + BLOCK_SIZE / 2;
+        const int blockCenterXGrid = std::floor(blockCenterX / BLOCK_SIZE);
+        const auto& blockAboveCenter = blockCenterXGrid == x ? blockAbove : m_Grid.At(blockCenterXGrid, y-1);
+        if (blockAboveCenter.has_value()) {
+            StopBlockAndAlignToY(block, y);
+            return;
+        }
+
         // More accurate check if next grid is reachable
         // const float distanceToReachNextGrid = block.WorldPosition.y - desiredYGrid * BOX_SIZE;
         // const float minVelocityToReachNextGrid = std::sqrt(2.0f * GRAVITY * distanceToReachNextGrid);

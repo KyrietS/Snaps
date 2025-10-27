@@ -245,8 +245,82 @@ TEST_F(SmoothSliding, BlockSlowlySlidesLeftOverTheEdge) {
     AddSand(3, 1);
     GetBlock(3, 1).Velocity.x = -10.0f;
 
-    m_Scene->TickTime(2.0f);
-    // TODO: To be implemented...
+    m_Scene->TickTime(0.75f);
+    EXPECT_SCENE(m_Scene, check::BlockIsEmptyAt(2, 3));
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingLeftAt(2, 2));
+    EXPECT_SCENE(m_Scene, check::Not(check::BlockIsMovingDownAt(2, 2)));
+
+    m_Scene->TickTime(0.25f);
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingLeftAt(2, 3));
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingDownAt(2, 3));
+
+    m_Scene->TickTime(1.0f);
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(2, 3));
+    EXPECT_SCENE(m_Scene, check::BlockIsNotMovingAt(2, 3));
+}
+
+TEST_F(SmoothSliding, BlockSlowlySlidesRightOverTheEdge) {
+    InitializeTestScene(5, 5);
+    AddWall(1, 3);
+    AddSand(1, 1);
+    GetBlock(1, 1).Velocity.x = +10.0f;
+
+    m_Scene->TickTime(0.75f);
+    EXPECT_SCENE(m_Scene, check::BlockIsEmptyAt(2, 3));
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingRightAt(2, 2));
+    EXPECT_SCENE(m_Scene, check::Not(check::BlockIsMovingDownAt(2, 2)));
+
+    m_Scene->TickTime(0.25f);
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingRightAt(2, 3));
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingDownAt(2, 3));
+
+    m_Scene->TickTime(1.0f);
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(2, 3));
+    EXPECT_SCENE(m_Scene, check::BlockIsNotMovingAt(2, 3));
+}
+
+TEST_F(SmoothSliding, BlockSlowlySlidesLeftUnderTheEdge) {
+    InitializeTestScene(5, 5);
+    m_Engine->GetConfig().Gravity = -m_Engine->GetConfig().Gravity;
+    AddWall(3, 1);
+    AddSand(3, 3);
+    GetBlock(3, 3).Velocity.x = -10.0f;
+
+    m_Scene->TickTime(0.75f);
+    EXPECT_SCENE(m_Scene, check::BlockIsEmptyAt(2, 1));
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingLeftAt(2, 2));
+    EXPECT_SCENE(m_Scene, check::Not(check::BlockIsMovingUpAt(2, 2)));
+
+    m_Scene->TickTime(0.25f);
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingLeftAt(2, 1));
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingUpAt(2, 1));
+
+    m_Scene->TickTime(1.0f);
+    // FIXME: No friction when sliding with inversed gravity
+    // EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(2, 1));
+    // EXPECT_SCENE(m_Scene, check::BlockIsNotMovingAt(2, 1));
+}
+
+TEST_F(SmoothSliding, BlockSlowlySlidesRightUnderTheEdge) {
+    InitializeTestScene(5, 5);
+    m_Engine->GetConfig().Gravity = -m_Engine->GetConfig().Gravity;
+    AddWall(1, 1);
+    AddSand(1, 3);
+    GetBlock(1, 3).Velocity.x = +10.0f;
+
+    m_Scene->TickTime(0.75f);
+    EXPECT_SCENE(m_Scene, check::BlockIsEmptyAt(2, 1));
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingRightAt(2, 2));
+    EXPECT_SCENE(m_Scene, check::Not(check::BlockIsMovingUpAt(2, 2)));
+
+    m_Scene->TickTime(0.25f);
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingRightAt(2, 1));
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingUpAt(2, 1));
+
+    m_Scene->TickTime(1.0f);
+    // FIXME: No friction when sliding with inversed gravity
+    // EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(2, 1));
+    // EXPECT_SCENE(m_Scene, check::BlockIsNotMovingAt(2, 1));
 }
 
 struct ImpulseTest : SceneTest {};
