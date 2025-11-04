@@ -515,16 +515,16 @@ TEST_F(SlideTest, SlideRightThreeBlocksStacked) {
     AddSand(2, 4);
     AddSand(2, 3);
     AddSand(2, 2);
-    snaps::ApplyImpulse(GetBlock(2, 4), {400.0f, 0.0f});
-    snaps::ApplyImpulse(GetBlock(2, 3), {400.0f, 0.0f});
-    snaps::ApplyImpulse(GetBlock(2, 2), {400.0f, 0.0f});
+    snaps::ApplyImpulse(GetBlock(2, 4), {320.0f, 0.0f});
+    snaps::ApplyImpulse(GetBlock(2, 3), {320.0f, 0.0f});
+    snaps::ApplyImpulse(GetBlock(2, 2), {320.0f, 0.0f});
 
     m_Scene->Tick();
     EXPECT_SCENE(m_Scene, check::BlockIsMovingRightAt(3, 4));
     EXPECT_SCENE(m_Scene, check::BlockIsMovingRightAt(3, 3));
     EXPECT_SCENE(m_Scene, check::BlockIsMovingRightAt(3, 2));
 
-    m_Scene->TickTime(1.0f);
+    m_Scene->TickTime(1.5f);
     EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(3, 4));
     EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(9, 4));
     EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(13, 4));
@@ -535,16 +535,16 @@ TEST_F(SlideTest, SlideLeftThreeBlocksStacked) {
     AddSand(12, 4);
     AddSand(12, 3);
     AddSand(12, 2);
-    snaps::ApplyImpulse(GetBlock(12, 4), {-400.0f, 0.0f});
-    snaps::ApplyImpulse(GetBlock(12, 3), {-400.0f, 0.0f});
-    snaps::ApplyImpulse(GetBlock(12, 2), {-400.0f, 0.0f});
+    snaps::ApplyImpulse(GetBlock(12, 4), {-320.0f, 0.0f});
+    snaps::ApplyImpulse(GetBlock(12, 3), {-320.0f, 0.0f});
+    snaps::ApplyImpulse(GetBlock(12, 2), {-320.0f, 0.0f});
 
     m_Scene->Tick();
     EXPECT_SCENE(m_Scene, check::BlockIsMovingLeftAt(11, 4));
     EXPECT_SCENE(m_Scene, check::BlockIsMovingLeftAt(11, 3));
     EXPECT_SCENE(m_Scene, check::BlockIsMovingLeftAt(11, 2));
 
-    m_Scene->TickTime(1.0f);
+    m_Scene->TickTime(1.5f);
     EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(1, 4));
     EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(5, 4));
     EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(11, 4));
@@ -687,7 +687,7 @@ TEST_F(EdgeTest, GoOverTheEdgeGoingRightAndDown) {
     AddSand(4, 1);
     GetBlock(4, 1).Velocity.x = 10.0f;
 
-    m_Scene->TickTime(1.0f);
+    m_Scene->TickTime(1.75f);
     EXPECT_SCENE(m_Scene, check::BlockIsYAlignedAt(5, 6));
 }
 
@@ -695,7 +695,7 @@ TEST_F(EdgeTest, GoOverTheEdgeGoingLeftAndDown) {
     AddSand(3, 1);
     GetBlock(3, 1).Velocity.x = -10.0f;
 
-    m_Scene->TickTime(1.0f);
+    m_Scene->TickTime(1.75f);
     EXPECT_SCENE(m_Scene, check::BlockIsYAlignedAt(2, 6));
 }
 
