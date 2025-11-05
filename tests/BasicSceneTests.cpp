@@ -323,6 +323,20 @@ TEST_F(SmoothSliding, BlockSlowlySlidesRightUnderTheEdge) {
     // EXPECT_SCENE(m_Scene, check::BlockIsNotMovingAt(2, 1));
 }
 
+TEST_F(SmoothSliding, BlockSlowlySlidesRightOverTheEdgeWhileOtherBlockSlidesUnderIt) {
+    InitializeTestScene(12, 5);
+    AddWall(1, 3);
+    AddSand(1, 1);
+    GetBlock(1, 1).Velocity.x = +10.0f;
+    AddSand(8, 3);
+    GetBlock(8, 3).Velocity.x = -200.0f;
+    GetBlock(8, 3).Friction = 0.01f;
+
+    m_Scene->TickTime(2.0f);
+    EXPECT_SCENE(m_Scene, check::BlockIsNotMovingAt(2, 2));
+    EXPECT_SCENE(m_Scene, check::BlockIsNotMovingAt(2, 3));
+}
+
 struct ImpulseTest : SceneTest {};
 
 TEST_F(ImpulseTest, ImpulseTooWeakToSlideDueToFriction) {
