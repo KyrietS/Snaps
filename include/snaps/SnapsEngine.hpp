@@ -51,6 +51,8 @@ private:
     void ApplyDrag(Block& block);
     void DiscardResistanceForcesIfNecessary(int x, int y, Block& block);
 
+    bool AreTouching(const Block&, const Block&) const;
+
     Grid& m_Grid;
 
     struct SecondPassContact {

@@ -296,9 +296,8 @@ TEST_F(SmoothSliding, BlockSlowlySlidesLeftUnderTheEdge) {
     EXPECT_SCENE(m_Scene, check::BlockIsMovingUpAt(2, 1));
 
     m_Scene->TickTime(1.0f);
-    // FIXME: No friction when sliding with inversed gravity
-    // EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(2, 1));
-    // EXPECT_SCENE(m_Scene, check::BlockIsNotMovingAt(2, 1));
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(2, 1));
+    EXPECT_SCENE(m_Scene, check::BlockIsNotMovingAt(2, 1));
 }
 
 TEST_F(SmoothSliding, BlockSlowlySlidesRightUnderTheEdge) {
@@ -318,9 +317,8 @@ TEST_F(SmoothSliding, BlockSlowlySlidesRightUnderTheEdge) {
     EXPECT_SCENE(m_Scene, check::BlockIsMovingUpAt(2, 1));
 
     m_Scene->TickTime(1.0f);
-    // FIXME: No friction when sliding with inversed gravity
-    // EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(2, 1));
-    // EXPECT_SCENE(m_Scene, check::BlockIsNotMovingAt(2, 1));
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(2, 1));
+    EXPECT_SCENE(m_Scene, check::BlockIsNotMovingAt(2, 1));
 }
 
 TEST_F(SmoothSliding, BlockSlowlySlidesRightOverTheEdgeWhileOtherBlockSlidesUnderIt) {

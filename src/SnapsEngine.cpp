@@ -349,10 +349,11 @@ void SnapsEngine::ApplyGravity(Block& block) {
 
 void SnapsEngine::ApplyFriction(const int x, const int y, Block& block) {
     if (not m_Grid.InBounds(x, y+1)) return;
+    if (not m_Grid.InBounds(x, y-1)) return;
 
-    const auto& surface = m_Grid.At(x, y+1);
+    const auto& surface = block.ForceAccum.y > 0 ? m_Grid.At(x, y+1) : m_Grid.At(x, y-1);
     const bool isSliding = surface.has_value()                                // Block below must exist
-        and (block.WorldPosition.y + BLOCK_SIZE >= surface->WorldPosition.y)  // Blocks must be touching or overlapping
+        and AreTouching(block, *surface)                                      // Block must touch the surface
         and surface->Velocity.x == 0                                          // Block below must be stationary in X
         and block.Velocity.y >= 0;                                            // This I don't remember :D
 
@@ -374,8 +375,8 @@ void SnapsEngine::ApplyFrictionBetween(Block& block, const Block& surface) {
     const float mass = 1.0f / block.InvMass;
     const float multiplier = std::sqrt(block.Friction * surface.Friction);
 
-    // Assume the gravity is already applied
-    float frictionForce = std::max(block.ForceAccum.y, 0.0f) * multiplier * mass * dir;
+    // Assume the vertical force (gravity) is towards the surface
+    float frictionForce = std::abs(block.ForceAccum.y) * multiplier * mass * dir;
 
     // Clamp: if this force would reverse velocity, zero it instead
     const float maxForce = mass * relativeVelocity / m_DeltaTime;
@@ -451,4 +452,12 @@ void SnapsEngine::DiscardResistanceForcesIfNecessary(int x, int y, Block& block)
         }
     }
 }
+
+bool SnapsEngine::AreTouching(const Block& block1, const Block& block2) const {
+    return block1.WorldPosition.x + BLOCK_SIZE >= block2.WorldPosition.x
+        and block1.WorldPosition.x <= block2.WorldPosition.x + BLOCK_SIZE
+        and block1.WorldPosition.y + BLOCK_SIZE >= block2.WorldPosition.y
+        and block1.WorldPosition.y <= block2.WorldPosition.y + BLOCK_SIZE;
+}
+
 }
