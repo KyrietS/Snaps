@@ -45,7 +45,7 @@ void SnapsEngine::SimulatePhysics() {
         }
         SecondPassGridPhysicsHorizontal();
     }
-    SecondPassGridPhysicsVertical();
+    ThirdPassGridPhysicsVertical();
 }
 
 void SnapsEngine::SimulateMovement(const int x, const int y, Block& block) {
@@ -87,7 +87,7 @@ void SnapsEngine::SolveGridPhysics(int x, int y, const CollisionPass collisionPa
 void SnapsEngine::SolveGridPhysics(const int gridX, const int gridY, Block& block, const CollisionPass collisionPass) {
     MovementResolution resolution {gridX, gridY, collisionPass};
 
-    if (collisionPass != CollisionPass::SecondVertical) {
+    if (collisionPass != CollisionPass::Third) {
         SolveMovementHorizontal(block, resolution);
         if (resolution.Resolved) return;
     }
@@ -104,18 +104,18 @@ void SnapsEngine::SolveGridPhysics(const int gridX, const int gridY, Block& bloc
 
 
 void SnapsEngine::SecondPassGridPhysicsHorizontal() {
-    while (not m_RightMovementContacts.empty()) {
-        auto [x, y] = m_RightMovementContacts.top();
-        SolveGridPhysics(x, y, CollisionPass::SecondHorizontal);
-        m_RightMovementContacts.pop();
+    while (not m_SecondPassCandidates.empty()) {
+        auto [x, y] = m_SecondPassCandidates.top();
+        SolveGridPhysics(x, y, CollisionPass::Secondary);
+        m_SecondPassCandidates.pop();
     }
 }
 
-void SnapsEngine::SecondPassGridPhysicsVertical() {
-    while (not m_UpMovementContacts.empty()) {
-        auto [x, y] = m_UpMovementContacts.top();
-        SolveGridPhysics(x, y, CollisionPass::SecondVertical);
-        m_UpMovementContacts.pop();
+void SnapsEngine::ThirdPassGridPhysicsVertical() {
+    while (not m_ThirdPassCandidates.empty()) {
+        auto [x, y] = m_ThirdPassCandidates.top();
+        SolveGridPhysics(x, y, CollisionPass::Third);
+        m_ThirdPassCandidates.pop();
     }
 }
 
@@ -209,8 +209,8 @@ void SnapsEngine::SolveMovementRight(Block& block, MovementResolution& resolutio
     // Desired grid is occupied. Stop.
     if (wantsToMoveRight and blockRight.has_value()) {
         const bool blockRightIsMoving = blockRight->Velocity.x != 0 or blockRight->Velocity.y != 0;
-        if (blockRightIsMoving and resolution.Pass != CollisionPass::SecondHorizontal) { // Try in the second pass. If we are lucky, the block on
-            m_RightMovementContacts.push({x, y});                      // the right will claim another block and release this one.
+        if (blockRightIsMoving and resolution.Pass != CollisionPass::Secondary) { // Try in the second pass. If we are lucky, the block on
+            m_SecondPassCandidates.push({x, y});                      // the right will claim another block and release this one.
             resolution.Resolved = true;
         } else { // Stop.
             StopBlockAndAlignToX(block, x);
@@ -226,8 +226,8 @@ void SnapsEngine::SolveMovementRight(Block& block, MovementResolution& resolutio
         const int blockCenterYGrid = std::floor(blockCenterY / BLOCK_SIZE);
         const auto& blockRightCenter = blockCenterYGrid == y ? blockRight : m_Grid.At(x + 1, blockCenterYGrid);
         if (blockRightCenter.has_value() and blockCenterY > blockRightCenter->WorldPosition.y and blockCenterY < blockRightCenter->WorldPosition.y + BLOCK_SIZE) {
-            if (resolution.Pass != CollisionPass::SecondHorizontal) {
-                m_RightMovementContacts.push({x, y});
+            if (resolution.Pass != CollisionPass::Secondary) {
+                m_SecondPassCandidates.push({x, y});
                 resolution.Resolved = true;
             } else {
                 StopBlockAndAlignToX(block, x);
@@ -333,8 +333,8 @@ void SnapsEngine::SolveMovementUp(Block& block, MovementResolution& resolution) 
     // Desired grid is occupied.
     if (wantsToMoveUp and blockAbove.has_value()) {
         const bool blockAboveIsMoving = blockAbove->Velocity.x != 0 or blockAbove->Velocity.y != 0;
-        if (blockAboveIsMoving and resolution.Pass != CollisionPass::SecondVertical) { // Try in the second pass. If we are lucky, the block above
-            m_UpMovementContacts.push({x, y});                         // will claim another block and release this one.
+        if (blockAboveIsMoving and resolution.Pass != CollisionPass::Third) { // Try in the second pass. If we are lucky, the block above
+            m_ThirdPassCandidates.push({x, y});                         // will claim another block and release this one.
             resolution.Resolved = true;
         } else { // Stop.
             StopBlockAndAlignToY(block, y);
@@ -350,8 +350,8 @@ void SnapsEngine::SolveMovementUp(Block& block, MovementResolution& resolution) 
         const int blockCenterXGrid = std::floor(blockCenterX / BLOCK_SIZE);
         const auto& blockAboveCenter = blockCenterXGrid == x ? blockAbove : m_Grid.At(blockCenterXGrid, y-1);
         if (blockAboveCenter.has_value() and blockCenterX > blockAboveCenter->WorldPosition.x and blockCenterX < blockAboveCenter->WorldPosition.x + BLOCK_SIZE) {
-            if (resolution.Pass != CollisionPass::SecondVertical) {
-                m_UpMovementContacts.push({x, y});
+            if (resolution.Pass != CollisionPass::Third) {
+                m_ThirdPassCandidates.push({x, y});
                 resolution.Resolved = true;
             } else {
                 StopBlockAndAlignToY(block, y);

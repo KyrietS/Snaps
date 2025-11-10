@@ -20,14 +20,14 @@ public:
     Config& GetConfig() { return m_Config; }
 
 private:
-    enum class CollisionPass { First, SecondHorizontal, SecondVertical };
+    enum class CollisionPass { First, Secondary, Third };
     void SimulatePhysics();
     void SimulateMovement(int x, int y, Block& block);
     void Integrate(Block&);
     void SolveGridPhysics(int gridX, int gridY, CollisionPass);
     void SolveGridPhysics(int gridX, int gridY, Block& block, CollisionPass);
     void SecondPassGridPhysicsHorizontal();
-    void SecondPassGridPhysicsVertical();
+    void ThirdPassGridPhysicsVertical();
 
     struct MovementResolution {
         MovementResolution(const int x, const int y, const CollisionPass pass) : X(x), Y(y), Pass(pass) {}
@@ -55,14 +55,14 @@ private:
 
     Grid& m_Grid;
 
-    struct SecondPassContact {
+    struct CollisionPassCandidate {
         int x;
         int y;
     };
 
     Config m_Config;
     float m_DeltaTime = 0.0f;
-    std::stack<SecondPassContact> m_RightMovementContacts;
-    std::stack<SecondPassContact> m_UpMovementContacts;
+    std::stack<CollisionPassCandidate> m_SecondPassCandidates;
+    std::stack<CollisionPassCandidate> m_ThirdPassCandidates;
 };
 }
