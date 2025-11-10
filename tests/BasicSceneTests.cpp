@@ -105,7 +105,7 @@ TEST_F(BasicSceneTest, FreeFallOnTopOfEachOther) {
     EXPECT_SCENE(m_Scene, check::BlockIsMovingDownAt(2, 3));
 
     m_Scene->Tick();
-    // EXPECT_SCENE(m_Scene, check::BlockIsMovingDownAt(2, 2)); FIXME it collides mid-air with block below
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingDownAt(2, 2));
     EXPECT_SCENE(m_Scene, check::BlockIsMovingDownAt(2, 3));
 
     m_Scene->TickTime(0.5);
@@ -808,11 +808,17 @@ TEST_F(CollisionTest, VerticalCollisionWithTwoBlocksGoingTheSameWay) {
     GetBlock(2, 1).Velocity.y = 100.0f;
     GetBlock(2, 3).Velocity.y = 50.0f;
 
-    m_Scene->TickTime(0.75f);
-    EXPECT_SCENE(m_Scene, check::BlockIsEmptyAt(2, 7));
-    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(2, 8));
+    m_Scene->TickTime(0.25f); // Before collision
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingDownAt(2, 3));
+    EXPECT_SCENE(m_Scene, check::BlockIsEmptyAt(2, 4));
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingDownAt(2, 5));
 
-    m_Scene->TickTime(0.5f);
+    m_Scene->TickTime(0.25f); // Collided and stick
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingDownAt(2, 6));
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingDownAt(2, 7));
+    EXPECT_EQ(GetBlock(2, 6).Velocity.y, GetBlock(2, 7).Velocity.y);
+
+    m_Scene->TickTime(0.25f);
     EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(2, 7));
     EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(2, 8));
 }

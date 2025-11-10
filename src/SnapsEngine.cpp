@@ -278,8 +278,9 @@ void SnapsEngine::SolveMovementDown(Block& block, MovementResolution& resolution
 
     // Only accelerated movements mid-air collision can result with a stop because
     // the gravity will make the block fall again to the desired spot.
-    if (blockBelow and block.WorldPosition.y + BLOCK_SIZE >= blockBelow->WorldPosition.y) { // collided with block mid-fall
-        block.Velocity.y = 0;
+    if (blockBelow and block.WorldPosition.y + BLOCK_SIZE >= blockBelow->WorldPosition.y) {
+        // Collided with a block below. If it goes the same direction use its speed do continue down. Otherwise, stop.
+        block.Velocity.y = blockBelow->Velocity.y >= 0 ? blockBelow->Velocity.y : 0;
     }
 }
 
