@@ -147,6 +147,30 @@ TEST_F(BasicSceneTest, BlockStoppedMidTileShouldBeAligned) {
     EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(finalPosX, finalPosY));
 }
 
+TEST_F(BasicSceneTest, DiagonalMovementOfTwoBlocks) {
+    InitializeTestScene(10, 10);
+    AddSand(1, 8);
+    AddSand(2, 8);
+    AddSand(1, 7);
+    AddSand(2, 7);
+    GetBlock(1, 8).Velocity = {200.0f, -200.0f};
+    GetBlock(2, 8).Velocity = {200.0f, -200.0f};
+    GetBlock(1, 7).Velocity = {200.0f, -200.0f};
+    GetBlock(2, 7).Velocity = {200.0f, -200.0f};
+
+    m_Scene->TickN(1);
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingUpAt(2, 7));
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingUpAt(3, 7));
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingUpAt(2, 6));
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingUpAt(3, 6));
+
+    m_Scene->TickTime(2.0f);
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(7, 7));
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(7, 8));
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(8, 7));
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(8, 8));
+}
+
 struct SmoothSliding : SceneTest {};
 
 TEST_F(SmoothSliding, BlockSlidesLeftWithFrictionBeingDiscarded) {

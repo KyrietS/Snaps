@@ -20,7 +20,7 @@ public:
     Config& GetConfig() { return m_Config; }
 
 private:
-    enum class CollisionPass { First, Second };
+    enum class CollisionPass { First, SecondHorizontal, SecondVertical };
     void SimulatePhysics();
     void SimulateMovement(int x, int y, Block& block);
     void Integrate(Block&);
