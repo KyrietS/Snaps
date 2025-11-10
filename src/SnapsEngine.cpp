@@ -159,6 +159,16 @@ void SnapsEngine::SolveMovementLeft(Block& block, MovementResolution& resolution
 
     // Desired grid is free. Claim it if we have enough velocity to reach it.
     if (wantsToMoveLeft and not blockLeft.has_value()) {
+        // Claim a block to the right only if the center of the block can reach it (smooth edge overlapping).
+        // We basically slide the block vertically until its center point does not exceed the edge.
+        const float blockCenterY = block.WorldPosition.y + BLOCK_SIZE / 2;
+        const int blockCenterYGrid = std::floor(blockCenterY / BLOCK_SIZE);
+        const auto& blockLeftCenter = blockCenterYGrid == y ? blockLeft : m_Grid.At(x - 1, blockCenterYGrid);
+        if (blockLeftCenter.has_value()) {
+            StopBlockAndAlignToX(block, x);
+            return;
+        }
+
         const float deceleration = block.Acceleration.x > 0 ? block.Acceleration.x : 0.0f;
         const float minVelocityToReachNextGrid = MinVelocityForDistance(deceleration);
 
@@ -208,6 +218,16 @@ void SnapsEngine::SolveMovementRight(Block& block, MovementResolution& resolutio
 
     // Desired grid is free. Claim it if we have enough velocity to reach it.
     if (wantsToMoveRight and not blockRight.has_value()) {
+        // Claim a block to the right only if the center of the block can reach it (smooth edge overlapping).
+        // We basically slide the block vertically until its center point does not exceed the edge.
+        const float blockCenterY = block.WorldPosition.y + BLOCK_SIZE / 2;
+        const int blockCenterYGrid = std::floor(blockCenterY / BLOCK_SIZE);
+        const auto& blockRightCenter = blockCenterYGrid == y ? blockRight : m_Grid.At(x + 1, blockCenterYGrid);
+        if (blockRightCenter.has_value()) {
+            StopBlockAndAlignToX(block, x);
+            return;
+        }
+
         const float deceleration = block.Acceleration.x < 0 ? -block.Acceleration.x : 0.0f;
         const float minVelocityToReachNextGrid = MinVelocityForDistance(deceleration);
 
@@ -260,7 +280,7 @@ void SnapsEngine::SolveMovementDown(Block& block, MovementResolution& resolution
 
     // Desired grid is free, claim it. Assume we will always have enough velocity to reach it due to gravity.
     if (wantsToMoveDown and not blockBelow.has_value()) {
-        // Claim block below only if center of the block can reach it
+        // Claim a block below only if the center of the block can reach it (smooth edge overlapping).
         // We basically slide the block horizontally until its center point does not exceed the edge.
         const float blockCenterX = block.WorldPosition.x + BLOCK_SIZE / 2;
         const int blockCenterXGrid = std::floor(blockCenterX / BLOCK_SIZE);
@@ -317,7 +337,7 @@ void SnapsEngine::SolveMovementUp(Block& block, MovementResolution& resolution) 
 
     // Desired grid is free. Claim it if we have enough velocity to reach it.
     if (wantsToMoveUp and not blockAbove.has_value()) {
-        // Claim block above only if center of the block can reach it
+        // Claim a block above only if the center of the block can reach it (smooth edge overlapping).
         // We basically slide the block horizontally until its center point does not exceed the edge.
         const float blockCenterX = block.WorldPosition.x + BLOCK_SIZE / 2;
         const int blockCenterXGrid = std::floor(blockCenterX / BLOCK_SIZE);

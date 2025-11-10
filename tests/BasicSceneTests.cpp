@@ -335,6 +335,30 @@ TEST_F(SmoothSliding, BlockSlowlySlidesRightOverTheEdgeWhileOtherBlockSlidesUnde
     EXPECT_SCENE(m_Scene, check::BlockIsNotMovingAt(2, 3));
 }
 
+TEST_F(SmoothSliding, BlockSlidesVerticallyRight) {
+    InitializeTestScene(5, 5);
+    m_Engine->GetConfig().Gravity = 0;
+    AddWall(3, 1);
+    AddSand(1, 1);
+    GetBlock(1, 1).Velocity = {20.0, 5.0f};
+
+    m_Scene->TickTime(2.0f);
+    EXPECT_SCENE(m_Scene, check::BlockIsEmptyAt(3, 2));
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingDownAt(2, 2));
+}
+
+TEST_F(SmoothSliding, BlockSlidesVerticallyLeft) {
+    InitializeTestScene(5, 5);
+    m_Engine->GetConfig().Gravity = 0;
+    AddWall(1, 1);
+    AddSand(3, 1);
+    GetBlock(3, 1).Velocity = {-20.0, 5.0f};
+
+    m_Scene->TickTime(2.0f);
+    EXPECT_SCENE(m_Scene, check::BlockIsEmptyAt(1, 2));
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingDownAt(2, 2));
+}
+
 struct ImpulseTest : SceneTest {};
 
 TEST_F(ImpulseTest, ImpulseTooWeakToSlideDueToFriction) {
@@ -571,7 +595,7 @@ TEST_F(SlideTest, SlideOverTheEdgeAndFallVerticallyDueToWall) {
     GetBlock(1, 1).Velocity.x = 300.0;
 
     m_Scene->TickTime(0.8f);
-    // EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(3, 3)); // FIXME: This should pass
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(3, 3));
 }
 
 TEST_F(SlideTest, SlideOverTheEdgeAndFallVerticallyDueToWall2) {
@@ -713,7 +737,7 @@ TEST_F(EdgeTest, GoOverTheEdgeGoingLeftAndDown) {
 
 TEST_F(EdgeTest, GoOverTheEdgeGoingRightAndUp) {
     AddSand(1, 3);
-    GetBlock(1, 3).Velocity = {200.f, -100.0f};
+    GetBlock(1, 3).Velocity = {200.f, -120.0f};
 
     m_Scene->TickTime(1.5f);
     EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(6, 6));
@@ -721,7 +745,7 @@ TEST_F(EdgeTest, GoOverTheEdgeGoingRightAndUp) {
 
 TEST_F(EdgeTest, GoOverTheEdgeGoingLeftAndUp) {
     AddSand(6, 4);
-    GetBlock(6, 4).Velocity = {-150.f, -200.0f};
+    GetBlock(6, 4).Velocity = {-150.f, -220.0f};
 
     m_Scene->TickTime(1.5f);
     EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(1, 6));
@@ -729,7 +753,7 @@ TEST_F(EdgeTest, GoOverTheEdgeGoingLeftAndUp) {
 
 TEST_F(EdgeTest, GoUnderTheEdgeGoingRightAndDown) {
     AddSand(1, 4);
-    GetBlock(1, 4).Velocity = {200.f, 0.0f};
+    GetBlock(1, 4).Velocity = {200.f, 100.0f};
 
     m_Scene->TickTime(1.0f);
     EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(6, 6));
@@ -737,7 +761,7 @@ TEST_F(EdgeTest, GoUnderTheEdgeGoingRightAndDown) {
 
 TEST_F(EdgeTest, GoUnderTheEdgeGoingLeftAndDown) {
     AddSand(6, 4);
-    GetBlock(6, 4).Velocity = {-200.f, 0.0f};
+    GetBlock(6, 4).Velocity = {-200.f, 100.0f};
 
     m_Scene->TickTime(1.0f);
     EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(1, 6));
