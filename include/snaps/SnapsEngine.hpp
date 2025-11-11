@@ -6,8 +6,14 @@
 namespace snaps {
 
 struct Config {
+    // Acceleration towards the bottom.
     float Gravity = 200.0f;
+
+    // Deceleration force represented as a percentage of velocity.
     float Drag = 0.2f;
+
+    // When external forces are about to stop the block unaligned, then a smooth snapping
+    // mechanism is triggered moving the block towards alignment using this velocity.
     float SmoothSnappingMinVelocity = 10.0f;
 };
 
