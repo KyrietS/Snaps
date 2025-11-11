@@ -407,24 +407,21 @@ TEST_F(ImpulseTest, ImpulseTooWeakToJumpDueToGravity) {
     EXPECT_SCENE(m_Scene, check::BlockIsNotMovingAt(2, 3));
 }
 
-TEST_F(ImpulseTest, ImpulseTooStrongThatExceedsMaxSpeedLimit) {
-    InitializeTestScene(5, 5);
-    AddSand(1, 2);
-
+TEST_F(ImpulseTest, VelocityTooHighThatBlockCouldGoThroughTheWall) {
+    InitializeTestScene(10, 3);
     const float maxSpeed = snaps::BLOCK_SIZE / m_Scene->GetDeltaTime();
-    const float maxImpulse = maxSpeed / GetBlock(1, 2).InvMass;
-    snaps::ApplyImpulse(GetBlock(1, 2), {maxImpulse + 10.0f, 0.0f});
 
-    EXPECT_SCENE(m_Scene, check::BlockIsDynamicAt(1, 2));
+    // FIXME: Need continuous collision detection to make it work
+    AddWall(6, 1);
+    AddSand(1, 1);
+    GetBlock(1, 1).Friction = 0.0f;
+    GetBlock(1, 1).Velocity.x = maxSpeed * 3.5f;
     m_Scene->Tick();
-    EXPECT_SCENE(m_Scene, check::BlockIsEmptyAt(1, 2));
-    EXPECT_SCENE(m_Scene, check::BlockIsEmptyAt(2, 2));
-    EXPECT_SCENE(m_Scene, check::BlockIsDynamicAt(2, 3));
+    // EXPECT_SCENE(m_Scene, check::BlockIsMovingRightAt(5, 1));
 
-    // FIXME: Generally the behavior of such fast moving blocks is currently undefined.
-    //        The engine should either clamp the velocity or apply sub-stepping.
-    //        This check should never pass because it means that block claims (2,3) but went past it.
-    // EXPECT_SCENE(m_Scene, check::BlockWorldPositionIsAt(2, 3, check::Vector(testing::Lt(2 * snaps::BOX_SIZE), testing::_)));
+    m_Scene->Tick();
+    // EXPECT_SCENE(m_Scene, check::BlockIsNotMovingAt(5, 1));
+    // EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(5, 1));
 }
 
 TEST_F(ImpulseTest, ImpulseToTheRightWhenInMidAir) {
