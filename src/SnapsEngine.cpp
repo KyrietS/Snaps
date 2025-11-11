@@ -21,6 +21,12 @@ void StopBlockAndAlignToY(Block& block, int gridY) {
     block.WorldPosition.y = static_cast<float>(gridY) * BLOCK_SIZE;
     block.Velocity.y = 0.0f;
 }
+
+Vector2 ClampToBlockSize(Vector2&& vec) {
+    vec.x = std::min(vec.x, static_cast<float>(BLOCK_SIZE));
+    vec.y = std::min(vec.y, static_cast<float>(BLOCK_SIZE));
+    return vec;
+}
 } // namespace
 
 SnapsEngine::SnapsEngine(Grid& grid) : m_Grid(grid) {}
@@ -72,7 +78,7 @@ void SnapsEngine::Integrate(Block& block) {
     if (std::abs(block.Velocity.x) < 0.01f) block.Velocity.x = 0.0f;
     if (std::abs(block.Velocity.y) < 0.01f) block.Velocity.y = 0.0f;
 
-    block.WorldPosition += block.Velocity * m_DeltaTime;
+    block.WorldPosition += ClampToBlockSize(block.Velocity * m_DeltaTime);
     block.ForceAccum = {0, 0};
 
     block.NeedsCollisionResolution = true;
@@ -359,9 +365,6 @@ void SnapsEngine::SolveMovementUp(Block& block, MovementResolution& resolution) 
             return;
         }
 
-        // More accurate check if next grid is reachable
-        // const float distanceToReachNextGrid = block.WorldPosition.y - desiredYGrid * BOX_SIZE;
-        // const float minVelocityToReachNextGrid = std::sqrt(2.0f * GRAVITY * distanceToReachNextGrid);
         const float deceleration = block.Acceleration.y > 0 ? block.Acceleration.y : 0.0f;
         const float minVelocityToReachNextGrid = MinVelocityForDistance(deceleration);
 
@@ -387,7 +390,7 @@ void SnapsEngine::ApplyFriction(const int x, const int y, Block& block) {
     const auto& surface = block.ForceAccum.y > 0 ? m_Grid.At(x, y+1) : m_Grid.At(x, y-1);
     const bool isSliding = surface.has_value()                                // Block below must exist
         and AreTouching(block, *surface)                                      // Block must touch the surface
-        and surface->Velocity.x == 0                                          // Block below must be stationary in X
+        and surface->Velocity.x == 0                                          // Surface must be stationary in X
         and block.Velocity.y >= 0;                                            // This I don't remember :D
 
     if (isSliding) {

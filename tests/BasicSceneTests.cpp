@@ -171,6 +171,49 @@ TEST_F(BasicSceneTest, DiagonalMovementOfTwoBlocks) {
     EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(8, 8));
 }
 
+// Not implemented yet. Maybe some day.
+TEST_F(BasicSceneTest, ContinuousCollisionDetectionToTheRight) {
+    InitializeTestScene(10, 3);
+    const float maxSpeed = snaps::BLOCK_SIZE / m_Scene->GetDeltaTime();
+
+    AddWall(6, 1);
+    AddSand(1, 1);
+    GetBlock(1, 1).Friction = 0.0f;
+    GetBlock(1, 1).Velocity.x = maxSpeed * 3.5f;
+    m_Scene->Tick();
+    // EXPECT_SCENE(m_Scene, check::BlockIsMovingRightAt(5, 1));
+
+    m_Scene->Tick();
+    // EXPECT_SCENE(m_Scene, check::BlockIsNotMovingAt(5, 1));
+    // EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(5, 1));
+}
+
+TEST_F(BasicSceneTest, MaxVelocityClamp) {
+    InitializeTestScene(10, 3);
+    const float maxSpeed = snaps::BLOCK_SIZE / m_Scene->GetDeltaTime();
+
+    AddWall(6, 1);
+    AddSand(1, 1);
+    GetBlock(1, 1).Friction = 0.0f;
+    GetBlock(1, 1).Velocity.x = maxSpeed * 3.5f;
+
+    m_Scene->Tick();
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingRightAt(2, 1));
+
+    m_Scene->Tick();
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingRightAt(3, 1));
+
+    m_Scene->Tick();
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingRightAt(4, 1));
+
+    m_Scene->Tick();
+    EXPECT_SCENE(m_Scene, check::BlockIsMovingRightAt(5, 1));
+
+    m_Scene->Tick();
+    EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(5, 1));
+    EXPECT_SCENE(m_Scene, check::BlockIsNotMovingAt(5, 1));
+}
+
 struct SmoothSliding : SceneTest {};
 
 TEST_F(SmoothSliding, BlockSlidesLeftWithFrictionBeingDiscarded) {
@@ -405,23 +448,6 @@ TEST_F(ImpulseTest, ImpulseTooWeakToJumpDueToGravity) {
     m_Scene->Tick();
     EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(2, 3));
     EXPECT_SCENE(m_Scene, check::BlockIsNotMovingAt(2, 3));
-}
-
-TEST_F(ImpulseTest, VelocityTooHighThatBlockCouldGoThroughTheWall) {
-    InitializeTestScene(10, 3);
-    const float maxSpeed = snaps::BLOCK_SIZE / m_Scene->GetDeltaTime();
-
-    // FIXME: Need continuous collision detection to make it work
-    AddWall(6, 1);
-    AddSand(1, 1);
-    GetBlock(1, 1).Friction = 0.0f;
-    GetBlock(1, 1).Velocity.x = maxSpeed * 3.5f;
-    m_Scene->Tick();
-    // EXPECT_SCENE(m_Scene, check::BlockIsMovingRightAt(5, 1));
-
-    m_Scene->Tick();
-    // EXPECT_SCENE(m_Scene, check::BlockIsNotMovingAt(5, 1));
-    // EXPECT_SCENE(m_Scene, check::BlockIsAlignedAt(5, 1));
 }
 
 TEST_F(ImpulseTest, ImpulseToTheRightWhenInMidAir) {
